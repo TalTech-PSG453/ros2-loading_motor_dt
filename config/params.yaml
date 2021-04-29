@@ -1,0 +1,11 @@
+tb_lm:
+  data_processor:
+    ros__parameters:
+      run_forever: True
+      num_of_cols: 12
+      filename: "/home/sejego/dev_ws/src/loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+      #filename: "/home/sejego/dev_ws/src/loading_motor_dt/src/data_processor/healthy_current_5k.csv"
+  
+  efficiency_map:
+    ros__parameters:
+      filename: "/home/sejego/dev_ws/src/loading_motor_dt/src/efficiency/PMSynRM.csv"

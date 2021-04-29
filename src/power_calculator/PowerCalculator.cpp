@@ -1,0 +1,218 @@
+#include "rclcpp/rclcpp.hpp"
+#include <stdlib.h>
+#include <chrono>
+#include <memory>
+#include <functional>
+#include <std_msgs/msg/float32.hpp>
+#include <digital_twin_msgs/msg/current.hpp>
+#include <digital_twin_msgs/msg/voltage.hpp>
+#include <digital_twin_msgs/msg/power.hpp>
+
+using namespace std::chrono_literals;
+
+class PowerCalculator : public rclcpp::Node
+{
+private:
+    //bool canCalculate = false;
+    float input_current_[3];
+    float input_voltage_[3];
+    float mean_[2][3] ={0.0};
+    float square_[2][3] = {0.0};
+    std::vector<std::vector<float>> currents_;
+    std::vector<std::vector<float>> voltages_;
+    std::vector<std::vector<float>> current_buffer_;
+    std::vector<std::vector<float>> voltage_buffer_;
+    const float COS_PHI = 0.84;
+    const int SIZE_A = 5000;
+    /* counters for calculating RMS values */
+    int c  = 0;
+    int v = 0;
+    float rms_currents_[3] = {0.0};
+    float rms_voltages_[3] = {0.0};
+    float phase_power_electrical_[3];
+    float total_power_electrical_;
+    float phase_power_reactive_[3];
+    float total_power_reactive_;
+    bool voltage_ready_ = false;
+    bool current_ready_ = false;
+
+    /* Declaration of publisher and subscriber shared pointers */
+
+    rclcpp::Subscription<digital_twin_msgs::msg::Voltage>::SharedPtr voltageSubscriber;
+    rclcpp::Subscription<digital_twin_msgs::msg::Current>::SharedPtr currentSubscriber;
+    rclcpp::Publisher<digital_twin_msgs::msg::Power>::SharedPtr PowerElectricalPublisher;
+    rclcpp::Publisher<digital_twin_msgs::msg::Power>::SharedPtr PowerReactivePublisher;
+    rclcpp::TimerBase::SharedPtr timer_electrical_;
+    rclcpp::TimerBase::SharedPtr timer_reactive_;
+    digital_twin_msgs::msg::Power powerReactMsg;
+    digital_twin_msgs::msg::Power powerElMsg;
+
+    void calculateRMS()
+    {
+        /* square_ */
+        for (int j = 0; j < SIZE_A; j++)
+        {
+            square_[0][0] += current_buffer_[0][j] * current_buffer_[0][j];
+            square_[0][1] += current_buffer_[1][j] * current_buffer_[1][j];
+            square_[0][2] += current_buffer_[2][j] * current_buffer_[2][j];
+
+            square_[1][0] += voltage_buffer_[0][j] * voltage_buffer_[0][j];
+            square_[1][1] += voltage_buffer_[1][j] * voltage_buffer_[1][j];
+            square_[1][2] += voltage_buffer_[2][j] * voltage_buffer_[2][j];
+        }
+        for (int j = 0; j < 3; j++)
+        {
+            mean_[0][j] = (square_[0][j] / SIZE_A);
+            mean_[1][j] = (square_[1][j] / SIZE_A);
+        }
+        for (int j = 0; j < 3; j++)
+        {
+            rms_currents_[j] = std::sqrt(mean_[0][j]);
+            rms_voltages_[j] = std::sqrt(mean_[1][j]);
+        }
+        for(int i=0;i<2;i++)
+        {
+            for(int j=0; j<3; j++)
+            {
+                square_[i][j] = 0;
+            }
+        }
+    }
+
+public:
+
+    PowerCalculator() : Node("power_calculator")
+    {
+        currents_.resize(3);
+        voltages_.resize(3);
+
+    PowerReactivePublisher = this->create_publisher<digital_twin_msgs::msg::Power>("motor_power/reactive_power", 100);
+    PowerElectricalPublisher = this->create_publisher<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100);
+    voltageSubscriber = this->create_subscription<digital_twin_msgs::msg::Voltage>("input_voltage", 100, 
+                                                std::bind(&PowerCalculator::voltageCallback, this, std::placeholders::_1));
+    currentSubscriber = this->create_subscription<digital_twin_msgs::msg::Current>("input_current", 100,
+                                                std::bind(&PowerCalculator::currentCallback, this, std::placeholders::_1));
+
+    timer_electrical_ = this->create_wall_timer(100ms, std::bind(&PowerCalculator::publishElectricalPower, this)); // Here frequency maybe faulty - check it
+    timer_reactive_ = this->create_wall_timer(100ms, std::bind(&PowerCalculator::publishReactivePower, this));
+    }
+
+    void currentCallback(const digital_twin_msgs::msg::Current::SharedPtr msg)
+    {
+        input_current_[0] = msg->current1;
+        input_current_[1] = msg->current2;
+        input_current_[2] = msg->current3;
+
+
+        if(c >= SIZE_A )
+        {
+            current_buffer_ = currents_;
+            current_ready_ = true;
+            currents_.clear();
+            currents_.resize(3);
+            c = 0;
+        }
+
+        currents_.at(0).push_back(msg->current1);
+        currents_.at(1).push_back(msg->current2);
+        currents_.at(2).push_back(msg->current3);
+
+        c++;
+    }
+    void voltageCallback(const digital_twin_msgs::msg::Voltage::SharedPtr msg)
+    {
+        input_voltage_[0] = msg->voltage1;
+        input_voltage_[1] = msg->voltage2;
+        input_voltage_[2] = msg->voltage3;
+        if(v >= SIZE_A )
+        {
+            voltage_buffer_ = voltages_;
+            voltage_ready_ = true;
+            voltages_.clear();
+            voltages_.resize(3);
+            v = 0;
+        }
+
+        voltages_.at(0).push_back(msg->voltage1);
+        voltages_.at(1).push_back(msg->voltage2);
+        voltages_.at(2).push_back(msg->voltage3);
+
+        v++;
+    }
+    void calculatePowerReactive()
+    {
+        for(int i=0;i<3;i++)
+        {
+            phase_power_reactive_[i] = (abs(input_current_[i]*input_voltage_[i]))/3;
+        }
+        total_power_reactive_ = phase_power_reactive_[0]+phase_power_reactive_[1]+phase_power_reactive_[2];
+        //return totalPower;
+    }
+    bool calculatePowerElectrical()
+    {
+        /* BOOL to confirm calculation and not send bullcrap?*/
+        if(current_ready_ && voltage_ready_)
+        {
+            calculateRMS();
+            phase_power_electrical_[0] = rms_currents_[0] * rms_voltages_[0] * COS_PHI;
+            phase_power_electrical_[1] = rms_currents_[1] * rms_voltages_[1] * COS_PHI;
+            phase_power_electrical_[2] = rms_currents_[2] * rms_voltages_[2] * COS_PHI;
+            total_power_electrical_ = phase_power_electrical_[0] + phase_power_electrical_[1] + phase_power_electrical_[2];
+            return true;
+        }
+        // Is this really needed?
+        else
+        {
+            return false;
+        }
+    }
+
+    void publishElectricalPower()
+    {
+        if(calculatePowerElectrical())
+        {
+            powerElMsg.phase1 = phase_power_electrical_[0];
+            powerElMsg.phase2 = phase_power_electrical_[1];
+            powerElMsg.phase3 = phase_power_electrical_[2];
+            powerElMsg.total = total_power_electrical_;
+            clearBuffers();
+            PowerElectricalPublisher->publish(powerElMsg);
+            setCurrentReady(false);
+            setVoltageReady(false);
+           // setCanCalculate(false);
+        }
+    }
+
+    void publishReactivePower()
+    {
+        calculatePowerReactive();
+        powerReactMsg.phase1 = phase_power_reactive_[0];
+        powerReactMsg.phase2 = phase_power_reactive_[1];
+        powerReactMsg.phase3 = phase_power_reactive_[2];
+        powerReactMsg.total = total_power_reactive_;
+        PowerReactivePublisher->publish(powerReactMsg);
+    }
+
+    void clearBuffers()
+    {
+        current_buffer_.clear();
+        voltage_buffer_.clear();
+    }
+    void setCurrentReady(bool val)
+    {
+        current_ready_ = val;
+    }
+    void setVoltageReady(bool val)
+    {
+        voltage_ready_ = val;
+    }
+
+};
+
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<PowerCalculator>());
+    rclcpp::shutdown();
+    return 0;
+}
