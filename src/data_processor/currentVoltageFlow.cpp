@@ -30,13 +30,13 @@ public:
     InputCurrentVoltage() : Node("data_processor")
     {
         /* initializing publishers/subscribers */
-        current_publisher = this->create_publisher<digital_twin_msgs::msg::Current>("input_current", 10);
-        voltage_publisher = this->create_publisher<digital_twin_msgs::msg::Voltage>("input_voltage", 10);
+        current_publisher_ = this->create_publisher<digital_twin_msgs::msg::Current>("input_current", 10);
+        voltage_publisher_ = this->create_publisher<digital_twin_msgs::msg::Voltage>("input_voltage", 10);
         timer_ = this->create_wall_timer(1ms, std::bind(&InputCurrentVoltage::publish_messages, this)); // 1ms = 1000 Hz
 
         /* initialize parameters */
         init_ros_params();
-        this->runForever = run_forever_param.as_bool();
+        this->run_forever_ = run_forever_param.as_bool();
 
         /* Run parser */
         dewetron = new ParseDewetron(filename_param.as_string(), num_of_cols_param.as_int()); // get from params
@@ -45,13 +45,13 @@ public:
 
 private:
 
-    std::vector<std::vector<float>> arrayOfProcessedData;
+    std::vector<std::vector<float>> array_of_processed_data_;
     ParseDewetron *dewetron;
     digital_twin_msgs::msg::Current inputCurrentValuesMsg;
     digital_twin_msgs::msg::Voltage inputVoltageValuesMsg;
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<digital_twin_msgs::msg::Current>::SharedPtr current_publisher;
-    rclcpp::Publisher<digital_twin_msgs::msg::Voltage>::SharedPtr voltage_publisher;
+    rclcpp::Publisher<digital_twin_msgs::msg::Current>::SharedPtr current_publisher_;
+    rclcpp::Publisher<digital_twin_msgs::msg::Voltage>::SharedPtr voltage_publisher_;
 
     /* params */
 
@@ -59,40 +59,40 @@ private:
     rclcpp::Parameter filename_param;
     rclcpp::Parameter run_forever_param;
 
-    int arrIndex = 0;
-    bool runForever;
+    int arr_idx_ = 0;
+    bool run_forever_;
 
     void processValues()
     {
-        arrayOfProcessedData = dewetron->getOnlyValues();
+        array_of_processed_data_ = dewetron->getOnlyValues();
     }
 
     void wrapToMsgArray(int index)
     {
         /* According to indexes in the file */
-        inputCurrentValuesMsg.current1 = arrayOfProcessedData[index][5];
-        inputCurrentValuesMsg.current2 = arrayOfProcessedData[index][4];
-        inputCurrentValuesMsg.current3 = arrayOfProcessedData[index][3];
-        inputVoltageValuesMsg.voltage1 = arrayOfProcessedData[index][0];
-        inputVoltageValuesMsg.voltage2 = arrayOfProcessedData[index][1];
-        inputVoltageValuesMsg.voltage3 = arrayOfProcessedData[index][2];
+        inputCurrentValuesMsg.current1 = array_of_processed_data_[index][5];
+        inputCurrentValuesMsg.current2 = array_of_processed_data_[index][4];
+        inputCurrentValuesMsg.current3 = array_of_processed_data_[index][3];
+        inputVoltageValuesMsg.voltage1 = array_of_processed_data_[index][0];
+        inputVoltageValuesMsg.voltage2 = array_of_processed_data_[index][1];
+        inputVoltageValuesMsg.voltage3 = array_of_processed_data_[index][2];
     }
 
     void publish_messages()
     {
-        // If runForever is activated, the index will be reset to 0
-        if(runForever)
+        // If run_forever_ is activated, the index will be reset to 0
+        if(run_forever_)
         {
-            if (arrIndex >= dewetron->getNumberOfRows())
+            if (arr_idx_ >= dewetron->getNumberOfRows())
             {
-                arrIndex = 0;
+                arr_idx_ = 0;
             }
         }
 
-        wrapToMsgArray(arrIndex);
-        current_publisher->publish(inputCurrentValuesMsg);
-        voltage_publisher->publish(inputVoltageValuesMsg);
-        arrIndex += 1;
+        wrapToMsgArray(arr_idx_);
+        current_publisher_->publish(inputCurrentValuesMsg);
+        voltage_publisher_->publish(inputVoltageValuesMsg);
+        arr_idx_ += 1;
     }
 
     void init_ros_params()
