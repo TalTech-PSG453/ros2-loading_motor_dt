@@ -14,23 +14,23 @@ using namespace std::chrono_literals;
 class TorqueCalculator : public rclcpp::Node
 {
 private:
-    //const int angularVelocity = 157; // rad/s or 1500 rpm  | for debugging
-    bool velocityUpdated = false;
-    bool powerUpdated = false;
-    bool efficiencyUpdated = false;
+    //const int angular_velocity_fake = 157; // rad/s or 1500 rpm  | for debugging
+    bool is_velocity_updated_ = false;
+    bool is_power_updated_ = false;
+    bool is_efficiency_updated = false;
 
-    float electricalPower, efficiency, angularVelocity;
-    float mechanicalTorque = 0;
-    float electricalTorqueRef = 0;
+    float electrical_power_, efficiency_, angular_velocity_;
+    float mechanical_torque_ = 0;
+    float electrical_torque_ref_ = 0;
 
     float calculateElectricalTorqueRef()
     {
-        return (electricalPower / angularVelocity);
+        return (electrical_power_ / angular_velocity_);
     }
 
     float calculateMechanicalTorque()
     {
-        return (electricalTorqueRef * efficiency);
+        return (electrical_torque_ref_ * efficiency_);
     }
 
     /* Shared Pointers with ROS methods */
@@ -41,8 +41,8 @@ private:
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr mechanicalTorquePublisher;
     rclcpp::TimerBase::SharedPtr timer_;
 
-    std_msgs::msg::Float32 electrical_torque_msg;
-    std_msgs::msg::Float32 mechanical_torque_msg;
+    std_msgs::msg::Float32 electrical_torque_msg_;
+    std_msgs::msg::Float32 mechanical_torque_msg_;
 
 
 public:
@@ -51,13 +51,13 @@ public:
     /* Subscribers */
     powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
                             std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
-    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency", 100,
+    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency_", 100,
                             std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
     angularVelocityReceiver = this->create_subscription<std_msgs::msg::Float32>("shaft_angular_velocity", 100,
                             std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
 
-    electrical_torque_msg.data = 0;
-    mechanical_torque_msg.data = 0;
+    electrical_torque_msg_.data = 0;
+    mechanical_torque_msg_.data = 0;
 
     /* Publishers */
     electricalTorquePublisher = this->create_publisher<std_msgs::msg::Float32>("electrical_torque_ref", 10);
@@ -68,48 +68,48 @@ public:
 
     float getMechanicalTorque()
     {
-        return mechanicalTorque;
+        return mechanical_torque_;
     }
 
     float getElectricalTorqueRef()
     {
-        return electricalTorqueRef;
+        return electrical_torque_ref_;
     }
 
     void publishTorques()
     {
-        electrical_torque_msg.data = getElectricalTorqueRef();
-        mechanical_torque_msg.data = getMechanicalTorque();
-        electricalTorquePublisher->publish(electrical_torque_msg);
-        mechanicalTorquePublisher->publish(mechanical_torque_msg);
+        electrical_torque_msg_.data = getElectricalTorqueRef();
+        mechanical_torque_msg_.data = getMechanicalTorque();
+        electricalTorquePublisher->publish(electrical_torque_msg_);
+        mechanicalTorquePublisher->publish(mechanical_torque_msg_);
     }
 
     void powerListener(const digital_twin_msgs::msg::Power::SharedPtr msg)
     {
-        electricalPower = msg->total;
-        powerUpdated = true;
-        if(powerUpdated && velocityUpdated)
+        electrical_power_ = msg->total;
+        is_power_updated_ = true;
+        if(is_power_updated_ && is_velocity_updated_)
         {
-            electricalTorqueRef = calculateElectricalTorqueRef();
-            powerUpdated = false;
-            velocityUpdated = false;
+            electrical_torque_ref_ = calculateElectricalTorqueRef();
+            is_power_updated_ = false;
+            is_velocity_updated_ = false;
         }
     }
     void efficiencyListener(const std_msgs::msg::Float32::SharedPtr msg)
     {
-        efficiency = msg->data;
-       // efficiencyUpdated = true;
-        mechanicalTorque = calculateMechanicalTorque();
+        efficiency_ = msg->data;
+       // is_efficiency_updated_ = true;
+        mechanical_torque_ = calculateMechanicalTorque();
     }
     void angularVelocityListener(const std_msgs::msg::Float32::SharedPtr msg)
     {
-        angularVelocity = msg->data;
-        velocityUpdated = true;
-        if(powerUpdated && velocityUpdated)
+        angular_velocity_ = msg->data;
+        is_velocity_updated_ = true;
+        if(is_power_updated_ && is_velocity_updated_)
         {
-            electricalTorqueRef = calculateElectricalTorqueRef();
-            powerUpdated = false;
-            velocityUpdated = false;
+            electrical_torque_ref_ = calculateElectricalTorqueRef();
+            is_power_updated_ = false;
+            is_velocity_updated_ = false;
         }
     }
 };
