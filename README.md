@@ -1,6 +1,6 @@
 # LOADING_MOTOR_DT
 
-This README will briefly guide you to install and run the ROS2 version of*loading_motor_tb* for the project **PSG-453**
+This README will briefly guide you to install and run the ROS2 version of *loading_motor_tb* for the project **PSG-453**
 ## General Overview
 ****
 
@@ -50,8 +50,8 @@ You need to have ROS2 installed of version Foxy Fitzroy
 ****
 ### ROS
 
-Launch the **loading_motor_launch.launch** file.
+Launch the **loading_motor_launch.py** file.
 
 ```
-ros2 launch loading_motor_launch.launch
+ros2 launch loading_motor_launch
 ```
