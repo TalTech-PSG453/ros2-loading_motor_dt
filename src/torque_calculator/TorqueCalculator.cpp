@@ -51,7 +51,7 @@ public:
     /* Subscribers */
     powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
                             std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
-    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency_", 100,
+    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency", 100,
                             std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
     angularVelocityReceiver = this->create_subscription<std_msgs::msg::Float32>("shaft_angular_velocity", 100,
                             std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
