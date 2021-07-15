@@ -8,7 +8,10 @@
 #include <std_msgs/msg/string.hpp>
 #include <chrono>
 
+/* for MATLAB integration of Park'n'Clark */
+
 using namespace std::chrono_literals;
+// using namespace matlab::engine;
 
 class WindingErrorChecker : public rclcpp::Node
 {
@@ -31,6 +34,7 @@ public:
 
         warning_publisher_ = this->create_publisher<std_msgs::msg::String>("diagnostics/warnings/windings", 10);
         //this->create_wall_timer(1000ms, std::bind(&WindingErrorChecker::publishWarning, this));
+        //callMatlab();
     }
     ~WindingErrorChecker()
     {
@@ -77,6 +81,11 @@ private:
         warning_publisher_->publish(warning_msg_);
     }
 
+    /*void callMatlab()
+    {
+        std::unique_ptr<MATLABEngine> matlabPtr = startMATLAB();
+    }*/
+
     void phaseChecker()
     {
 
@@ -108,7 +117,7 @@ private:
                 for(float j : error_coefficient_)
                 {
                     /* Here the message is fired x+1 times, where x - amount of malfunctioning windings */
-                    if( abs(error_coefficient_[0] - j) > 0.15 )
+                    if( abs(error_coefficient_[0] - j) >= 0.15 )
                     {
                         RCLCPP_WARN(this->get_logger(), "Potential malfunction in motor windings");
                         publishWarning();
