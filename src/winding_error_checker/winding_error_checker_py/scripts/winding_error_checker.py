@@ -7,8 +7,9 @@ from std_msgs.msg import String
 from digital_twin_msgs.msg import Current
 import threading
 from math import pow, sqrt
-# import matlab.engine
-# import sys
+import matlab.engine
+import matlab
+import sys
 
 SIZE_A = 5000
 
@@ -28,11 +29,13 @@ class WindingErrorChecker(Node):
         #self.analysis_publisher_ = self.create_publisher(String, 'diagnostics/windings/park_clarke', 10)
         
         self.i = 0
+        self.matlab_active = False
+        self.can_calculate = False
         self.currents_= [[] for i in range(3)]
         self.currents_buf = [[] for i in range(3)]
-        self.can_calculate = False
+
         phase_check_thread = threading.Thread(target = self.phase_checker, daemon = True)
-        #matlab_thread = threading.Thread(target = self.matlab_analysis)
+        self.matlab_thread = threading.Thread(target = self.matlab_analysis, daemon=True)
         phase_check_thread.start()
         self.get_logger().info('Init happened')
 
@@ -41,10 +44,10 @@ class WindingErrorChecker(Node):
         msg.data = 'Winding warning'
         self.warnings_publisher_.publish(msg)
     
-    def publish_clarke_park(self):
-        msg = String()
-        msg.data = 'TEST MESSAGE'
-        self.warnings_publisher_.publish(msg)
+    #def publish_clarke_park(self):
+    #    msg = String()
+    #    msg.data = 'TEST MESSAGE'
+    #    self.warnings_publisher_.publish(msg)
 
     def current_callback(self, msg):
         if(self.i >= SIZE_A):
@@ -58,14 +61,22 @@ class WindingErrorChecker(Node):
         self.currents_[2].append(msg.current3)
         self.i += 1
 
-    #def matlab_analysis(self, buffer):
-    #    eng = matlab.engine.start_matlab()
-    #    x, y = eng.ParkClarke(buffer[0], buffer[1], buffer[2])
-    #    print(type(x))
-    #    print(type(y))
-    #    print('-----')
-    #    print(sys.getsizeof(x))
-    #    print(sys.getsizeof(y))
+    def matlab_analysis(self):
+        b = self.currents_buf_
+        # fix the above mess...
+        b1 = matlab.double(b[1])
+        b2 = matlab.double(b[2])
+        b3 = matlab.double(b[0])
+        print(type(b1))
+        eng = matlab.engine.start_matlab()
+        eng.cd(r'/home/sejego', nargout=0)      #substitute this for variable
+        x, y = eng.parkclarke(b1,b2,b3, nargout = 2)
+        print(type(x))
+        print(type(y))
+        print('-----')
+        print(sys.getsizeof(x))
+        print(sys.getsizeof(y))
+        eng.quit()
 
     def get_rms(self, buffer):
         square = [0, 0, 0]
@@ -101,6 +112,9 @@ class WindingErrorChecker(Node):
                     self.get_logger().warn('Potential winding problem')
                     self.publish_warning()
                     problematic = False
+                    if not self.matlab_active:
+                        self.matlab_thread.start()
+                        self.matlab_active = True
 
                 self.can_calculate = False
 
