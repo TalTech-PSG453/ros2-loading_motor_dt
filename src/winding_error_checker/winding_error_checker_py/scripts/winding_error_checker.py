@@ -84,6 +84,7 @@ class WindingErrorChecker(Node):
         return root
 
     def phase_checker(self):
+        problematic = False
         error_coeff = [0, 0, 0]
         while True:
             if self.can_calculate:
@@ -93,8 +94,13 @@ class WindingErrorChecker(Node):
 
                 for err in error_coeff:
                     if abs(error_coeff[0] - err) >= 0.15:
-                        self.get_logger().warn('Potential winding problem')
-                        self.publish_warning()
+                        problematic = True
+                        break
+
+                if problematic:
+                    self.get_logger().warn('Potential winding problem')
+                    self.publish_warning()
+                    problematic = False
 
                 self.can_calculate = False
 
