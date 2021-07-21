@@ -22,32 +22,33 @@ class WindingErrorChecker(Node):
 
         self.currents_listener_ = self.create_subscription(
             Current,
-            'tb_lm/input_current',
+            'input_current',
             self.current_callback,
             10)
 
         self.currents_listener_  # prevent unused variable warning
-        self.warnings_publisher_ = self.create_publisher(String, 'diagnostics/windings/warnings', 10)
+        self.warnings_publisher_ = self.create_publisher(String, 'diagnostics/warnings', 10)
         self.axes_currents_publisher_ = self.create_publisher(AxesCurrents, 'diagnostics/windings/axes_currents', 10)
 
-        #self.declare_parameter('park_clarke_matlab_path')
-        #matlab_script_path = str(self.get_parameter('park_clarke_matlab_path'))
-        matlab_script_path = '/home/sejego'
+        self.declare_parameter('matlab_path')
+        param = self.get_parameter('matlab_path')
+        matlab_script_path = param.get_parameter_value().string_value
 
         self.i = 0
         self.matlab_active = False
         self.can_calculate = False
         self.currents_= [[] for i in range(3)]
-        #self.currents_buf_ = [[] for i in range(3)]
 
         phase_check_thread = threading.Thread(target = self.phase_checker, daemon = True)
         self.matlab_thread = threading.Thread(target = self.matlab_analysis, args=(matlab_script_path,), daemon=True)
         phase_check_thread.start()
-        self.get_logger().info('Init happened')
 
         # Axes currents
         self.ids = []
         self.iqs = []
+
+        self.get_logger().info('Init happened')
+        self.get_logger().info('Matlab script path set to: "%s"' % matlab_script_path)
 
     def publish_warning(self):
         msg = String()
@@ -73,12 +74,11 @@ class WindingErrorChecker(Node):
         self.i += 1
 
     def matlab_analysis(self, script_path):
+        self.get_logger().info('Starting Park & Clarke analysis in Matlab')
         b = self.currents_buf_
-        # fix the above mess...
-        b1 = matlab.double(b[1])
-        b2 = matlab.double(b[2])
-        b3 = matlab.double(b[0])
-        print(type(b1))
+        ml_input = []
+        for i in range(3):
+            ml_input.append(matlab.double(b[i]))
 
         try:
             eng = matlab.engine.start_matlab()
@@ -87,13 +87,13 @@ class WindingErrorChecker(Node):
             self.get_logger().error("Failed to open MatLab Engine. Error: %s", e)
             exit()
 
-        eng.cd(script_path, nargout=0)      #substitute this for variable
+        eng.cd(script_path, nargout=0)
 
         try:
-            x, y = eng.parkclarke(b1,b2,b3, nargout = 2)
+            x, y = eng.parkclarke(ml_input[0], ml_input[1], ml_input[2], nargout = 2)
         except:
             e = sys.exc_info()[0]
-            self.get_logger().error("Failed to run Park Clarke function. Error: %s", e)
+            self.get_logger().error("Failed to run Park & Clarke function. Error: %s", e)
             eng.quit()
             exit()
 
@@ -106,6 +106,7 @@ class WindingErrorChecker(Node):
         self.publish_axes_currents()
 
         eng.quit()
+        self.get_logger().info('Matlab analysis finished')
 
     def get_rms(self, buffer):
         square = [0, 0, 0]

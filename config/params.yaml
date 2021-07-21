@@ -9,3 +9,7 @@ tb_lm:
   efficiency_map:
     ros__parameters:
       filename: "/home/sejego/dev_ws/src/loading_motor_dt/src/efficiency/PMSynRM.csv"
+  
+  windings_checker:
+    ros__parameters:
+      matlab_path: "/home/sejego"
