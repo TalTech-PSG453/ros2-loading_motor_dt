@@ -5,11 +5,13 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from digital_twin_msgs.msg import Current
+from digital_twin_msgs.msg import AxesCurrents
 import threading
 from math import pow, sqrt
 import matlab.engine
 import matlab
 import sys
+import os
 
 SIZE_A = 5000
 
@@ -26,28 +28,37 @@ class WindingErrorChecker(Node):
 
         self.currents_listener_  # prevent unused variable warning
         self.warnings_publisher_ = self.create_publisher(String, 'diagnostics/windings/warnings', 10)
-        #self.analysis_publisher_ = self.create_publisher(String, 'diagnostics/windings/park_clarke', 10)
-        
+        self.axes_currents_publisher_ = self.create_publisher(AxesCurrents, 'diagnostics/windings/axes_currents', 10)
+
+        #self.declare_parameter('park_clarke_matlab_path')
+        #matlab_script_path = str(self.get_parameter('park_clarke_matlab_path'))
+        matlab_script_path = '/home/sejego'
+
         self.i = 0
         self.matlab_active = False
         self.can_calculate = False
         self.currents_= [[] for i in range(3)]
-        self.currents_buf = [[] for i in range(3)]
+        #self.currents_buf_ = [[] for i in range(3)]
 
         phase_check_thread = threading.Thread(target = self.phase_checker, daemon = True)
-        self.matlab_thread = threading.Thread(target = self.matlab_analysis, daemon=True)
+        self.matlab_thread = threading.Thread(target = self.matlab_analysis, args=(matlab_script_path,), daemon=True)
         phase_check_thread.start()
         self.get_logger().info('Init happened')
+
+        # Axes currents
+        self.ids = []
+        self.iqs = []
 
     def publish_warning(self):
         msg = String()
         msg.data = 'Winding warning'
         self.warnings_publisher_.publish(msg)
     
-    #def publish_clarke_park(self):
-    #    msg = String()
-    #    msg.data = 'TEST MESSAGE'
-    #    self.warnings_publisher_.publish(msg)
+    def publish_axes_currents(self):
+        msg = AxesCurrents()
+        msg.q_axis_current = self.iqs
+        msg.d_axis_current = self.ids
+        self.axes_currents_publisher_.publish(msg)
 
     def current_callback(self, msg):
         if(self.i >= SIZE_A):
@@ -61,21 +72,39 @@ class WindingErrorChecker(Node):
         self.currents_[2].append(msg.current3)
         self.i += 1
 
-    def matlab_analysis(self):
+    def matlab_analysis(self, script_path):
         b = self.currents_buf_
         # fix the above mess...
         b1 = matlab.double(b[1])
         b2 = matlab.double(b[2])
         b3 = matlab.double(b[0])
         print(type(b1))
-        eng = matlab.engine.start_matlab()
-        eng.cd(r'/home/sejego', nargout=0)      #substitute this for variable
-        x, y = eng.parkclarke(b1,b2,b3, nargout = 2)
-        print(type(x))
-        print(type(y))
-        print('-----')
-        print(sys.getsizeof(x))
-        print(sys.getsizeof(y))
+
+        try:
+            eng = matlab.engine.start_matlab()
+        except:
+            e = sys.exc_info()[0]
+            self.get_logger().error("Failed to open MatLab Engine. Error: %s", e)
+            exit()
+
+        eng.cd(script_path, nargout=0)      #substitute this for variable
+
+        try:
+            x, y = eng.parkclarke(b1,b2,b3, nargout = 2)
+        except:
+            e = sys.exc_info()[0]
+            self.get_logger().error("Failed to run Park Clarke function. Error: %s", e)
+            eng.quit()
+            exit()
+
+        for element in x[0]:
+            self.ids.append(element)
+
+        for element in y[0]:
+            self.iqs.append(element)
+
+        self.publish_axes_currents()
+
         eng.quit()
 
     def get_rms(self, buffer):
