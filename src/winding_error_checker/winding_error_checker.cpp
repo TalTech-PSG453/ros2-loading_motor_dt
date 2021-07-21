@@ -8,10 +8,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <chrono>
 
-/* for MATLAB integration of Park'n'Clark */
-
 using namespace std::chrono_literals;
-// using namespace matlab::engine;
 
 class WindingErrorChecker : public rclcpp::Node
 {
@@ -33,8 +30,6 @@ public:
                             std::bind(&WindingErrorChecker::currentCallback, this, std::placeholders::_1));
 
         warning_publisher_ = this->create_publisher<std_msgs::msg::String>("diagnostics/warnings/windings", 10);
-        //this->create_wall_timer(1000ms, std::bind(&WindingErrorChecker::publishWarning, this));
-        //callMatlab();
     }
     ~WindingErrorChecker()
     {
@@ -48,7 +43,6 @@ private:
 
     rclcpp::Subscription<digital_twin_msgs::msg::Current>::SharedPtr currents_listener_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr warning_publisher_;
-    //rclcpp::TimerBase::SharedPtr timer_;
 
     bool not_terminated_ = true;
     float rms_currents_[3] = {0.0};
@@ -80,11 +74,6 @@ private:
         warning_msg_.data = "Winding warning";
         warning_publisher_->publish(warning_msg_);
     }
-
-    /*void callMatlab()
-    {
-        std::unique_ptr<MATLABEngine> matlabPtr = startMATLAB();
-    }*/
 
     void phaseChecker()
     {
