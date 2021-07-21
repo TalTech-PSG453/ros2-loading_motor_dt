@@ -7,6 +7,7 @@
 #include <digital_twin_msgs/msg/current.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <chrono>
+#include <array>
 
 using namespace std::chrono_literals;
 
@@ -45,8 +46,7 @@ private:
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr warning_publisher_;
 
     bool not_terminated_ = true;
-    float rms_currents_[3] = {0.0};
-    float mean_[3], square_[3];
+    std::array<float,3> rms_currents_ = {0.0, 0.0, 0.0};
     float error_coefficient_[3];
     int i = 0;
     const int SIZE_A = 5000;
@@ -75,50 +75,63 @@ private:
         warning_publisher_->publish(warning_msg_);
     }
 
+    std::array<float,3> calculateRMS(std::vector<std::vector<float>> &buffer)
+    {
+        float mean[3];
+        float square[3] = {0.0};
+        std::array<float, 3> root = {0.0, 0.0, 0.0};
+        /* squares */
+        for(int j = 0; j<SIZE_A ; j++)
+        {
+            square[0] += buffer[0][j]*buffer[0][j];
+            square[1] += buffer[1][j]*buffer[1][j];
+            square[2] += buffer[2][j]*buffer[2][j];
+        }
+        for(int j = 0; j<3;j++)
+        {
+            mean[j] = (square[j] / SIZE_A);
+        }
+        for(int j = 0; j<3; j++)
+        {
+            root[j] = std::sqrt(mean[j]);
+        }
+        return root;
+    }
+
     void phaseChecker()
     {
+        bool problematic = false;
 
         while(true)
         {
-            if(!not_terminated_)
-                break;
+            if(!not_terminated_) break;
 
             if(can_calculate_)
             {
-                for(int j = 0; j<SIZE_A ; j++)
-                {
-                    square_[0] += currents_buffer_[0][j]*currents_buffer_[0][j];
-                    square_[1] += currents_buffer_[1][j]*currents_buffer_[1][j];
-                    square_[2] += currents_buffer_[2][j]*currents_buffer_[2][j];
-                }
-                for(int j = 0; j<3;j++)
-                {
-                    mean_[j] = (square_[j] / SIZE_A);
-                }
-                for(int j = 0; j<3; j++)
-                {
-                    rms_currents_[j] = std::sqrt(mean_[j]);
-                }
+                rms_currents_ = calculateRMS(currents_buffer_);
+
                 for(int j = 0; j<3;j++)
                 {
                     error_coefficient_[j] = rms_currents_[j]/rms_currents_[0];
                 }
                 for(float j : error_coefficient_)
                 {
-                    /* Here the message is fired x+1 times, where x - amount of malfunctioning windings */
-                    if( abs(error_coefficient_[0] - j) >= 0.15 )
+                    if( abs(error_coefficient_[0] - j) >= 0.15 ) 
                     {
-                        RCLCPP_WARN(this->get_logger(), "Potential malfunction in motor windings");
-                        publishWarning();
+                        problematic = true;
+                        break;
                     }
+                }
+                
+                if(problematic == true)
+                {
+                    RCLCPP_WARN(this->get_logger(), "Potential malfunction in motor windings");
+                    publishWarning();
+                    problematic = false;
                 }
 
                 /* CLEANUP */
                 currents_buffer_.clear();
-                for(float & j : square_)
-                {
-                    j = 0;
-                }
                 can_calculate_ = false;
             }
         }
