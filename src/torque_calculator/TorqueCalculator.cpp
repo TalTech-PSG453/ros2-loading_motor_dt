@@ -7,7 +7,7 @@
 #include <functional>
 #include "rclcpp/rclcpp.hpp"
 #include <digital_twin_msgs/msg/power.hpp>
-#include "std_msgs/msg/float32.hpp"
+#include <digital_twin_msgs/msg/float32_stamped.hpp>
 
 using namespace std::chrono_literals;
 
@@ -34,15 +34,15 @@ private:
     }
 
     /* Shared Pointers with ROS methods */
-    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr efficiencyReceiver;
-    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr angularVelocityReceiver;
+    rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr efficiencyReceiver;
+    rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr angularVelocityReceiver;
     rclcpp::Subscription<digital_twin_msgs::msg::Power>::SharedPtr powerReceiver;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr electricalTorquePublisher;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr mechanicalTorquePublisher;
+    rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr electricalTorquePublisher;
+    rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr mechanicalTorquePublisher;
     rclcpp::TimerBase::SharedPtr timer_;
 
-    std_msgs::msg::Float32 electrical_torque_msg_;
-    std_msgs::msg::Float32 mechanical_torque_msg_;
+    digital_twin_msgs::msg::Float32Stamped electrical_torque_msg_;
+    digital_twin_msgs::msg::Float32Stamped mechanical_torque_msg_;
 
 
 public:
@@ -51,17 +51,17 @@ public:
     /* Subscribers */
     powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
                             std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
-    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency", 100,
+    efficiencyReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("efficiency", 100,
                             std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
-    angularVelocityReceiver = this->create_subscription<std_msgs::msg::Float32>("shaft_angular_velocity", 100,
+    angularVelocityReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("shaft_angular_velocity", 100,
                             std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
 
     electrical_torque_msg_.data = 0;
     mechanical_torque_msg_.data = 0;
 
     /* Publishers */
-    electricalTorquePublisher = this->create_publisher<std_msgs::msg::Float32>("electrical_torque_ref", 10);
-    mechanicalTorquePublisher = this->create_publisher<std_msgs::msg::Float32>("mechanical_torque", 10);
+    electricalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("electrical_torque_ref", 10);
+    mechanicalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("mechanical_torque", 10);
 
     timer_ = this->create_wall_timer(100ms, std::bind(&TorqueCalculator::publishTorques, this)); // 100ms = 10 Hz
     }
@@ -80,6 +80,8 @@ public:
     {
         electrical_torque_msg_.data = getElectricalTorqueRef();
         mechanical_torque_msg_.data = getMechanicalTorque();
+        electrical_torque_msg_.stamp = rclcpp::Node::now();
+        mechanical_torque_msg_.stamp = rclcpp::Node::now();
         electricalTorquePublisher->publish(electrical_torque_msg_);
         mechanicalTorquePublisher->publish(mechanical_torque_msg_);
     }
@@ -95,13 +97,13 @@ public:
             is_velocity_updated_ = false;
         }
     }
-    void efficiencyListener(const std_msgs::msg::Float32::SharedPtr msg)
+    void efficiencyListener(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg)
     {
         efficiency_ = msg->data;
        // is_efficiency_updated_ = true;
         mechanical_torque_ = calculateMechanicalTorque();
     }
-    void angularVelocityListener(const std_msgs::msg::Float32::SharedPtr msg)
+    void angularVelocityListener(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg)
     {
         angular_velocity_ = msg->data;
         is_velocity_updated_ = true;

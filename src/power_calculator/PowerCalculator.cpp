@@ -3,7 +3,6 @@
 #include <chrono>
 #include <memory>
 #include <functional>
-#include <std_msgs/msg/float32.hpp>
 #include <digital_twin_msgs/msg/current.hpp>
 #include <digital_twin_msgs/msg/voltage.hpp>
 #include <digital_twin_msgs/msg/power.hpp>
@@ -180,6 +179,7 @@ public:
             powerElMsg.phase3 = electrical_.phase[2];
             powerElMsg.total = electrical_.total;
             clearBuffers();
+            powerElMsg.stamp = rclcpp::Node::now();
             PowerElectricalPublisher->publish(powerElMsg);
             setCurrentReady(false);
             setVoltageReady(false);
@@ -194,6 +194,7 @@ public:
         powerReactMsg.phase2 = reactive_.phase[1];
         powerReactMsg.phase3 = reactive_.phase[2];
         powerReactMsg.total = reactive_.total;
+        powerReactMsg.stamp = rclcpp::Node::now();
         PowerReactivePublisher->publish(powerReactMsg);
     }
 

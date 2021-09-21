@@ -13,7 +13,6 @@
 #include <chrono>
 #include <memory>
 #include <functional>
-
 #include "rclcpp/rclcpp.hpp"
 #include <digital_twin_msgs/msg/current.hpp>
 #include <digital_twin_msgs/msg/voltage.hpp>
@@ -90,6 +89,7 @@ private:
         }
 
         wrapToMsgArray(arr_idx_);
+        inputCurrentValuesMsg.stamp = rclcpp::Node::now();
         current_publisher_->publish(inputCurrentValuesMsg);
         voltage_publisher_->publish(inputVoltageValuesMsg);
         arr_idx_ += 1;
