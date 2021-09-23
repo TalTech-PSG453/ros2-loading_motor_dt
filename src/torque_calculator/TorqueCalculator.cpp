@@ -8,6 +8,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include <digital_twin_msgs/msg/power.hpp>
 #include <digital_twin_msgs/msg/float32_stamped.hpp>
+#include <string>
+#include <fstream>
 
 using namespace std::chrono_literals;
 
@@ -18,6 +20,7 @@ private:
     bool is_velocity_updated_ = false;
     bool is_power_updated_ = false;
     bool is_efficiency_updated = false;
+    const std::string = 'torque_calculator';
 
     float electrical_power_, efficiency_, angular_velocity_;
     float mechanical_torque_ = 0;
@@ -33,6 +36,10 @@ private:
         return (electrical_torque_ref_ * efficiency_);
     }
 
+    void init_loggers()
+    {
+
+    }
     /* Shared Pointers with ROS methods */
     rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr efficiencyReceiver;
     rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr angularVelocityReceiver;
@@ -46,6 +53,7 @@ private:
 
 
 public:
+
     TorqueCalculator() : Node("torque_calculator")
     {
     /* Subscribers */
@@ -64,6 +72,9 @@ public:
     mechanicalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("mechanical_torque", 10);
 
     timer_ = this->create_wall_timer(100ms, std::bind(&TorqueCalculator::publishTorques, this)); // 100ms = 10 Hz
+
+    /* Initialize recorders */
+
     }
 
     float getMechanicalTorque()
@@ -114,6 +125,17 @@ public:
             is_velocity_updated_ = false;
         }
     }
+
+    // Placeholder function
+    /*void save_results()
+    {
+        std::ofstream RecordedFile;
+        RecordedFile.open("~/dev_ws/src/loading_motor_dt/recorded_data/torque_calculator_node.cpp");
+        RecordedFile << "topic,sent(#),received(#),time\n";
+        RecordedFile << "shaft_angular_velocity," << '-,' << s_angular_counter << ',' << 
+
+        
+    }*/
 };
 
 int main(int argc, char *argv[])
