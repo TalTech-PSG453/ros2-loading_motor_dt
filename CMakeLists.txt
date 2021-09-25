@@ -10,7 +10,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(MATLAB_DIR "/usr/local/MATLAB/R2021a")
+include_directories(include)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -29,13 +29,13 @@ add_executable(currentVoltageFlow src/data_processor/currentVoltageFlow.cpp
 	                          src/data_processor/ParseDewetron.h)
 	                          
 add_executable(efficiencyMap src/efficiency/EfficiencyMap.cpp)
-add_executable(windingErrorChecker src/winding_error_checker/winding_error_checker.cpp)
-add_executable(torqueCalculator src/torque_calculator/TorqueCalculator.cpp)
+add_executable(torqueCalculator src/torque_calculator/TorqueCalculator.cpp
+                                include/data_logger/data_logger.cpp
+                                include/data_logger/data_logger.hpp)
 add_executable(angularConverter src/angular_converter/AngularConverter.cpp)
 add_executable(powerCalculator src/power_calculator/PowerCalculator.cpp)
 
 ament_target_dependencies(currentVoltageFlow rclcpp std_msgs digital_twin_msgs)
-ament_target_dependencies(windingErrorChecker rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(torqueCalculator rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(efficiencyMap rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(angularConverter rclcpp std_msgs digital_twin_msgs)
@@ -51,15 +51,10 @@ endif()
 install(TARGETS
     currentVoltageFlow
     efficiencyMap
-    windingErrorChecker
     torqueCalculator
     angularConverter
     powerCalculator
     DESTINATION lib/${PROJECT_NAME}
-)
-install(PROGRAMS
-  src/winding_error_checker/winding_error_checker_py/scripts/winding_error_checker.py
-  DESTINATION lib/${PROJECT_NAME}
 )
 install(DIRECTORY
   launch

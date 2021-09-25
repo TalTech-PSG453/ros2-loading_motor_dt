@@ -11,7 +11,10 @@
 #include <string>
 #include <fstream>
 
+#include "data_logger/data_logger.hpp"
+
 using namespace std::chrono_literals;
+using namespace DataLogger;
 
 class TorqueCalculator : public rclcpp::Node
 {
@@ -20,7 +23,6 @@ private:
     bool is_velocity_updated_ = false;
     bool is_power_updated_ = false;
     bool is_efficiency_updated = false;
-    const std::string = 'torque_calculator';
 
     float electrical_power_, efficiency_, angular_velocity_;
     float mechanical_torque_ = 0;
@@ -36,10 +38,6 @@ private:
         return (electrical_torque_ref_ * efficiency_);
     }
 
-    void init_loggers()
-    {
-
-    }
     /* Shared Pointers with ROS methods */
     rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr efficiencyReceiver;
     rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr angularVelocityReceiver;
@@ -51,30 +49,40 @@ private:
     digital_twin_msgs::msg::Float32Stamped electrical_torque_msg_;
     digital_twin_msgs::msg::Float32Stamped mechanical_torque_msg_;
 
-
 public:
+
+    std::unique_ptr<SubscriptionLogger> p_power_rec;
+    std::unique_ptr<SubscriptionLogger> p_efficiency_rec;
+    std::unique_ptr<SubscriptionLogger> p_angular_rec;
+    std::unique_ptr<PublisherLogger> p_electrical_pub;
+    std::unique_ptr<PublisherLogger> p_mechanical_pub;
+
 
     TorqueCalculator() : Node("torque_calculator")
     {
-    /* Subscribers */
-    powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
-                            std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
-    efficiencyReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("efficiency", 100,
-                            std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
-    angularVelocityReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("shaft_angular_velocity", 100,
-                            std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
+        
+        /* Subscribers */
+        powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
+                                std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
+        efficiencyReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("efficiency", 100,
+                                std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
+        angularVelocityReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("shaft_angular_velocity", 100,
+                                std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
 
-    electrical_torque_msg_.data = 0;
-    mechanical_torque_msg_.data = 0;
+        electrical_torque_msg_.data = 0;
+        mechanical_torque_msg_.data = 0;
 
-    /* Publishers */
-    electricalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("electrical_torque_ref", 10);
-    mechanicalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("mechanical_torque", 10);
+        /* Publishers */
+        electricalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("electrical_torque_ref", 10);
+        mechanicalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("mechanical_torque", 10);
 
-    timer_ = this->create_wall_timer(100ms, std::bind(&TorqueCalculator::publishTorques, this)); // 100ms = 10 Hz
+        timer_ = this->create_wall_timer(100ms, std::bind(&TorqueCalculator::publishTorques, this)); // 100ms = 10 Hz
 
-    /* Initialize recorders */
-
+        p_power_rec.reset(new SubscriptionLogger("/electrical_power"));
+        p_efficiency_rec.reset(new SubscriptionLogger("/efficiency"));
+        p_angular_rec.reset(new SubscriptionLogger("/shaft_angular_velocity"));
+        p_electrical_pub.reset(new PublisherLogger("/electrical_torque"));
+        p_mechanical_pub.reset(new PublisherLogger("/mechanical_torque"));
     }
 
     float getMechanicalTorque()
@@ -94,12 +102,17 @@ public:
         electrical_torque_msg_.stamp = rclcpp::Node::now();
         mechanical_torque_msg_.stamp = rclcpp::Node::now();
         electricalTorquePublisher->publish(electrical_torque_msg_);
+        p_electrical_pub->sent_counter += 0;
         mechanicalTorquePublisher->publish(mechanical_torque_msg_);
+        p_mechanical_pub->sent_counter += 0;
     }
 
     void powerListener(const digital_twin_msgs::msg::Power::SharedPtr msg)
     {
         electrical_power_ = msg->total;
+        p_power_rec->recv_counter += 1;
+        rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+        p_power_rec->time_diffs.push_back(diff.nanoseconds());
         is_power_updated_ = true;
         if(is_power_updated_ && is_velocity_updated_)
         {
@@ -125,17 +138,6 @@ public:
             is_velocity_updated_ = false;
         }
     }
-
-    // Placeholder function
-    /*void save_results()
-    {
-        std::ofstream RecordedFile;
-        RecordedFile.open("~/dev_ws/src/loading_motor_dt/recorded_data/torque_calculator_node.cpp");
-        RecordedFile << "topic,sent(#),received(#),time\n";
-        RecordedFile << "shaft_angular_velocity," << '-,' << s_angular_counter << ',' << 
-
-        
-    }*/
 };
 
 int main(int argc, char *argv[])

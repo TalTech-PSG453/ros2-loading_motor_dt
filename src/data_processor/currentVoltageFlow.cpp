@@ -90,6 +90,7 @@ private:
 
         wrapToMsgArray(arr_idx_);
         inputCurrentValuesMsg.stamp = rclcpp::Node::now();
+        inputVoltageValuesMsg.stamp = rclcpp::Node::now();
         current_publisher_->publish(inputCurrentValuesMsg);
         voltage_publisher_->publish(inputVoltageValuesMsg);
         arr_idx_ += 1;
