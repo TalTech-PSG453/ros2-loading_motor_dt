@@ -10,7 +10,14 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+
 include_directories(include)
+
+ADD_LIBRARY(DATA_LOGGER
+    include/data_logger/data_logger.hpp
+    include/data_logger/data_logger.cpp
+)
+
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -29,9 +36,8 @@ add_executable(currentVoltageFlow src/data_processor/currentVoltageFlow.cpp
 	                          src/data_processor/ParseDewetron.h)
 	                          
 add_executable(efficiencyMap src/efficiency/EfficiencyMap.cpp)
-add_executable(torqueCalculator src/torque_calculator/TorqueCalculator.cpp
-                                include/data_logger/data_logger.cpp
-                                include/data_logger/data_logger.hpp)
+add_executable(torqueCalculator src/torque_calculator/TorqueCalculator.cpp)
+target_link_libraries(torqueCalculator DATA_LOGGER)
 add_executable(angularConverter src/angular_converter/AngularConverter.cpp)
 add_executable(powerCalculator src/power_calculator/PowerCalculator.cpp)
 

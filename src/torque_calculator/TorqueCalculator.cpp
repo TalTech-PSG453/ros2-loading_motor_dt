@@ -84,6 +84,11 @@ public:
         p_electrical_pub.reset(new PublisherLogger("/electrical_torque"));
         p_mechanical_pub.reset(new PublisherLogger("/mechanical_torque"));
     }
+    ~TorqueCalculator()
+    {
+        std::cout << "Time to save\n";
+        save_logged_data("torque_calculator_node.csv");
+    }
 
     float getMechanicalTorque()
     {
@@ -102,9 +107,9 @@ public:
         electrical_torque_msg_.stamp = rclcpp::Node::now();
         mechanical_torque_msg_.stamp = rclcpp::Node::now();
         electricalTorquePublisher->publish(electrical_torque_msg_);
-        p_electrical_pub->sent_counter += 0;
+        p_electrical_pub->sent_counter += 1;
         mechanicalTorquePublisher->publish(mechanical_torque_msg_);
-        p_mechanical_pub->sent_counter += 0;
+        p_mechanical_pub->sent_counter += 1;
     }
 
     void powerListener(const digital_twin_msgs::msg::Power::SharedPtr msg)
@@ -113,6 +118,7 @@ public:
         p_power_rec->recv_counter += 1;
         rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
         p_power_rec->time_diffs.push_back(diff.nanoseconds());
+        std::cout << "CALCULATED" << p_power_rec->time_diffs.back() << "\n";
         is_power_updated_ = true;
         if(is_power_updated_ && is_velocity_updated_)
         {

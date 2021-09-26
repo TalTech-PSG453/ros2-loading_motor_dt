@@ -1,5 +1,5 @@
-#ifndef DATALOGGER_H
-#define DATALOGGER_H
+#ifndef DATALOGGER_HPP
+#define DATALOGGER_HPP
 
 #include <iostream> // header in standard library
 #include <vector>
@@ -10,9 +10,14 @@
 
 namespace DataLogger
 {
+
     class SubscriptionLogger
     {
+       
         public:
+
+        SubscriptionLogger(std::string topic_name);
+        ~SubscriptionLogger();
 
         /*variables*/
 
@@ -20,8 +25,6 @@ namespace DataLogger
         std::vector<uint32_t> time_diffs;
         unsigned int recv_counter;
         /*function declarations*/
-        
-        SubscriptionLogger(std::string topic_name);
         /*
         float get_late(float period);
         float get_too_late(float period);
@@ -30,7 +33,14 @@ namespace DataLogger
         uint32_t get_max_latency();
         uint32_t get_min_latency();
 
-        int save_logged_data(std::string filename);
+        //void save_logged_data(std::string filename);
+        static std::vector<SubscriptionLogger*> get_list_of_loggers();
+        
+        private:
+
+        /* This is bad and must be fixed later... I just don't know how to make it with smart pointers without causing memory leaks, therefore
+        this is temporary fix, simpler but hopefully it won't break anything*/
+        static std::vector<SubscriptionLogger*> loggerList;
     };
 
     class PublisherLogger
@@ -38,11 +48,18 @@ namespace DataLogger
         public:
         
         PublisherLogger(std::string topic_name);
+        ~PublisherLogger();
         unsigned int sent_counter;
         std::string topic;
-        int save_logged_data(std::string filename);
+        static std::vector<PublisherLogger*> get_list_of_loggers();
+        
+        private:
+        
+        /* This is bad and must be fixed later... I just don't know how to make it with smart pointers without causing memory leaks, therefore
+        this is temporary fix, simpler but hopefully it won't break anything*/
+        static std::vector<PublisherLogger*> loggerList;
     };
 
-    // double get_period(float frequency);
+    void save_logged_data(std::string filename);
 }
 #endif
