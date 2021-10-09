@@ -18,13 +18,17 @@
 #include <digital_twin_msgs/msg/voltage.hpp>
 
 #include "ParseDewetron.h"
+#include "data_logger/data_logger.hpp"
 
 using namespace std::chrono_literals;
-
+using namespace DataLogger;
 class InputCurrentVoltage : public rclcpp::Node
 {
 
 public:
+
+    std::unique_ptr<PublisherLogger> p_current_pub;
+    std::unique_ptr<PublisherLogger> p_voltage_pub;
 
     InputCurrentVoltage() : Node("data_processor")
     {
@@ -40,6 +44,12 @@ public:
         /* Run parser */
         dewetron = new ParseDewetron(filename_param.as_string(), num_of_cols_param.as_int()); // get from params
         processValues();
+
+        p_current_pub.reset(new PublisherLogger("/input_current"));
+        p_voltage_pub.reset(new PublisherLogger("/input_voltage"));
+        inputCurrentValuesMsg.id = 0;    
+        inputVoltageValuesMsg.id = 0;
+
     }
 
 private:
@@ -92,7 +102,11 @@ private:
         inputCurrentValuesMsg.stamp = rclcpp::Node::now();
         inputVoltageValuesMsg.stamp = rclcpp::Node::now();
         current_publisher_->publish(inputCurrentValuesMsg);
+        p_current_pub->sent_counter += 1;
+        inputCurrentValuesMsg.id += 1;
         voltage_publisher_->publish(inputVoltageValuesMsg);
+        p_voltage_pub->sent_counter += 1;
+        inputVoltageValuesMsg.id += 1;
         arr_idx_ += 1;
     }
 
@@ -110,7 +124,9 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc,argv);
-    rclcpp::spin(std::make_shared<InputCurrentVoltage>());
+    auto ptr = std::make_shared<InputCurrentVoltage>();
+    rclcpp::spin(ptr);
+    DataLogger::save_logged_data("data_processor.csv");
     rclcpp::shutdown();
 
     return 0;

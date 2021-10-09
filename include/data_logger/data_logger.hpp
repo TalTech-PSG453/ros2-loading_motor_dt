@@ -24,6 +24,7 @@ namespace DataLogger
         std::string topic;
         std::vector<uint32_t> time_diffs;
         unsigned int recv_counter;
+        unsigned int next_id;
         /*function declarations*/
         /*
         float get_late(float period);

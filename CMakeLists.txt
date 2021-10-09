@@ -36,10 +36,14 @@ add_executable(currentVoltageFlow src/data_processor/currentVoltageFlow.cpp
 	                          src/data_processor/ParseDewetron.h)
 	                          
 add_executable(efficiencyMap src/efficiency/EfficiencyMap.cpp)
+target_link_libraries(efficiencyMap DATA_LOGGER)
 add_executable(torqueCalculator src/torque_calculator/TorqueCalculator.cpp)
 target_link_libraries(torqueCalculator DATA_LOGGER)
 add_executable(angularConverter src/angular_converter/AngularConverter.cpp)
+target_link_libraries(angularConverter DATA_LOGGER)
 add_executable(powerCalculator src/power_calculator/PowerCalculator.cpp)
+target_link_libraries(powerCalculator DATA_LOGGER)
+target_link_libraries(currentVoltageFlow DATA_LOGGER)
 
 ament_target_dependencies(currentVoltageFlow rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(torqueCalculator rclcpp std_msgs digital_twin_msgs)

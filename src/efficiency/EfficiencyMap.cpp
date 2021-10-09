@@ -15,9 +15,11 @@
 #include <memory>
 #include <functional>
 #include <digital_twin_msgs/msg/float32_stamped.hpp>
+#include "data_logger/data_logger.hpp"
 
 using namespace std;
 using namespace std::chrono_literals;
+using namespace DataLogger;
 int ticksSinceTarget;
 
 int closestItemIDX(vector<float> array, float item)
@@ -58,7 +60,12 @@ int timeoutTicks;
 
 class EfficiencyMapProcessor : public rclcpp::Node{
     public:
+    
     string line;
+    std::unique_ptr<PublisherLogger> p_efficiency_pub;
+    std::unique_ptr<SubscriptionLogger> p_torque_sub;
+    std::unique_ptr<SubscriptionLogger> p_rpm_sub;
+
     EfficiencyMapProcessor() : Node("efficiency_map")
     {
         /* Initalizing Parameters */
@@ -77,7 +84,13 @@ class EfficiencyMapProcessor : public rclcpp::Node{
         EfficiencyControl = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("efficiency", 10);
         
         timer_ = this->create_wall_timer(100ms, std::bind(&EfficiencyMapProcessor::publishEfficiency, this)); // 100ms = 10 Hz
-        }
+        
+        p_efficiency_pub.reset(new PublisherLogger("/efficiency"));
+        p_torque_sub.reset(new SubscriptionLogger("/torque"));
+        p_rpm_sub.reset(new SubscriptionLogger("/actual_rpm"));
+
+        efficiency_value.id = 0;
+    }
 
     float getEfficiency(float c_rpm, float c_torque)
     {
@@ -96,6 +109,8 @@ class EfficiencyMapProcessor : public rclcpp::Node{
         efficiency_value.data = (getEfficiency(current_state.rpm,current_state.torque)/100); // *current_state.torque
         efficiency_value.stamp = rclcpp::Node::now();
         EfficiencyControl->publish(efficiency_value);
+        efficiency_value.id += 1;
+        p_efficiency_pub->sent_counter += 1;
     }
 
     private:
@@ -111,12 +126,26 @@ class EfficiencyMapProcessor : public rclcpp::Node{
     {
         ticksSinceTarget = 0;
         current_state.torque=msg->data;
+        if(msg->id == p_torque_sub->next_id)
+        {
+            p_torque_sub->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_torque_sub->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_torque_sub->next_id = msg->id + 1;
     }
 
     void getRPM(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg)
     {
         ticksSinceTarget = 0;
         current_state.rpm=msg->data;
+        if(msg->id == p_torque_sub->next_id)
+        {
+            p_rpm_sub->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_rpm_sub->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_rpm_sub->next_id = msg->id + 1;
     }
 
     void processFile(std::string filename)
@@ -195,7 +224,9 @@ class EfficiencyMapProcessor : public rclcpp::Node{
 
 int main(int argc, char **argv) {
     rclcpp::init(argc,argv);
-    rclcpp::spin(std::make_shared<EfficiencyMapProcessor>());
+    auto ptr = std::make_shared<EfficiencyMapProcessor>();
+    rclcpp::spin(ptr);
+    DataLogger::save_logged_data("efficiency_map.csv");
     rclcpp::shutdown();
 
     return 0;

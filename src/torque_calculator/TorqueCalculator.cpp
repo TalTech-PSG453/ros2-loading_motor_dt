@@ -62,15 +62,17 @@ public:
     {
         
         /* Subscribers */
-        powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
+        powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("tb_lm/motor_power/electrical_power", 100,
                                 std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
-        efficiencyReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("efficiency", 100,
+        efficiencyReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("tb_lm/efficiency", 100,
                                 std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
-        angularVelocityReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("shaft_angular_velocity", 100,
+        angularVelocityReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("tb_lm/shaft_angular_velocity", 100,
                                 std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
 
         electrical_torque_msg_.data = 0;
         mechanical_torque_msg_.data = 0;
+        electrical_torque_msg_.id = 0;
+        mechanical_torque_msg_.id = 0;
 
         /* Publishers */
         electricalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("electrical_torque_ref", 10);
@@ -78,16 +80,12 @@ public:
 
         timer_ = this->create_wall_timer(100ms, std::bind(&TorqueCalculator::publishTorques, this)); // 100ms = 10 Hz
 
-        p_power_rec.reset(new SubscriptionLogger("/electrical_power"));
+        p_power_rec.reset(new SubscriptionLogger("/motor_power/electrical_power"));
         p_efficiency_rec.reset(new SubscriptionLogger("/efficiency"));
         p_angular_rec.reset(new SubscriptionLogger("/shaft_angular_velocity"));
         p_electrical_pub.reset(new PublisherLogger("/electrical_torque"));
         p_mechanical_pub.reset(new PublisherLogger("/mechanical_torque"));
-    }
-    ~TorqueCalculator()
-    {
-        std::cout << "Time to save\n";
-        save_logged_data("torque_calculator_node.csv");
+
     }
 
     float getMechanicalTorque()
@@ -108,17 +106,22 @@ public:
         mechanical_torque_msg_.stamp = rclcpp::Node::now();
         electricalTorquePublisher->publish(electrical_torque_msg_);
         p_electrical_pub->sent_counter += 1;
+        electrical_torque_msg_.id += 1;
         mechanicalTorquePublisher->publish(mechanical_torque_msg_);
+        mechanical_torque_msg_.id += 1;
         p_mechanical_pub->sent_counter += 1;
     }
 
     void powerListener(const digital_twin_msgs::msg::Power::SharedPtr msg)
     {
         electrical_power_ = msg->total;
-        p_power_rec->recv_counter += 1;
-        rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
-        p_power_rec->time_diffs.push_back(diff.nanoseconds());
-        std::cout << "CALCULATED" << p_power_rec->time_diffs.back() << "\n";
+        if(msg->id == p_power_rec->next_id)
+        {
+            p_power_rec->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_power_rec->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_power_rec->next_id = msg->id + 1;
         is_power_updated_ = true;
         if(is_power_updated_ && is_velocity_updated_)
         {
@@ -130,12 +133,28 @@ public:
     void efficiencyListener(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg)
     {
         efficiency_ = msg->data;
+        if(msg->id == p_efficiency_rec->next_id)
+        {
+            p_efficiency_rec->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_efficiency_rec->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_efficiency_rec->next_id = msg->id + 1;
        // is_efficiency_updated_ = true;
         mechanical_torque_ = calculateMechanicalTorque();
     }
     void angularVelocityListener(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg)
     {
         angular_velocity_ = msg->data;
+
+        if(msg->id == p_angular_rec->next_id)
+        {
+            p_angular_rec->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_angular_rec->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_angular_rec->next_id = msg->id + 1;
+
         is_velocity_updated_ = true;
         if(is_power_updated_ && is_velocity_updated_)
         {
@@ -149,7 +168,9 @@ public:
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc,argv);
-    rclcpp::spin(std::make_shared<TorqueCalculator>());
+    auto ptr = std::make_shared<TorqueCalculator>();
+    rclcpp::spin(ptr);
+    DataLogger::save_logged_data("torque_calculator.csv");
     rclcpp::shutdown();
     return 0;
 }

@@ -7,7 +7,10 @@
 #include <digital_twin_msgs/msg/voltage.hpp>
 #include <digital_twin_msgs/msg/power.hpp>
 
+#include "data_logger/data_logger.hpp"
+
 using namespace std::chrono_literals;
+using namespace DataLogger;
 
  struct powerValues
 {
@@ -84,8 +87,15 @@ private:
 
 public:
 
+    std::unique_ptr<PublisherLogger> p_electrical_power_pub;
+    std::unique_ptr<PublisherLogger> p_reactive_power_pub;
+
+    std::unique_ptr<SubscriptionLogger> p_current_sub;
+    std::unique_ptr<SubscriptionLogger> p_voltage_sub;
+
     PowerCalculator() : Node("power_calculator")
     {
+
         currents_.resize(3);
         voltages_.resize(3);
 
@@ -98,6 +108,14 @@ public:
 
         timer_electrical_ = this->create_wall_timer(100ms, std::bind(&PowerCalculator::publishElectricalPower, this)); // Here frequency maybe faulty - check it
         timer_reactive_ = this->create_wall_timer(100ms, std::bind(&PowerCalculator::publishReactivePower, this));
+
+        p_electrical_power_pub.reset(new PublisherLogger("/motor_power/electrical_power"));
+        p_reactive_power_pub.reset(new PublisherLogger("/motor_power/reactive_power"));
+        p_current_sub.reset(new SubscriptionLogger("/input_current"));
+        p_voltage_sub.reset(new SubscriptionLogger("/input_voltage"));
+
+        powerReactMsg.id = 0;
+        powerElMsg.id = 0;
     }
 
     void currentCallback(const digital_twin_msgs::msg::Current::SharedPtr msg)
@@ -105,7 +123,13 @@ public:
         input_current_[0] = msg->current1;
         input_current_[1] = msg->current2;
         input_current_[2] = msg->current3;
-
+        if(msg->id == p_current_sub->next_id)
+        {
+            p_current_sub->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_current_sub->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_current_sub->next_id = msg->id + 1;
 
         if(c >= SIZE_A )
         {
@@ -127,6 +151,12 @@ public:
         input_voltage_[0] = msg->voltage1;
         input_voltage_[1] = msg->voltage2;
         input_voltage_[2] = msg->voltage3;
+        if(msg->id == p_voltage_sub->next_id)
+        {   p_voltage_sub->recv_counter += 1;
+            rclcpp::Duration diff = rclcpp::Node::now() - msg->stamp;
+            p_voltage_sub->time_diffs.push_back(diff.nanoseconds());
+        }
+        p_voltage_sub->next_id = msg->id + 1;
         if(v >= SIZE_A )
         {
             voltage_buffer_ = voltages_;
@@ -181,6 +211,8 @@ public:
             clearBuffers();
             powerElMsg.stamp = rclcpp::Node::now();
             PowerElectricalPublisher->publish(powerElMsg);
+            powerElMsg.id += 1;
+            p_electrical_power_pub->sent_counter +=1;
             setCurrentReady(false);
             setVoltageReady(false);
            // setCanCalculate(false);
@@ -196,6 +228,8 @@ public:
         powerReactMsg.total = reactive_.total;
         powerReactMsg.stamp = rclcpp::Node::now();
         PowerReactivePublisher->publish(powerReactMsg);
+        powerReactMsg.id += 1;
+        p_reactive_power_pub->sent_counter += 1;
     }
 
     void clearBuffers()
@@ -217,7 +251,9 @@ public:
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<PowerCalculator>());
+    auto ptr = std::make_shared<PowerCalculator>();
+    rclcpp::spin(ptr);
+    DataLogger::save_logged_data("power_calculator.csv");
     rclcpp::shutdown();
     return 0;
 }
