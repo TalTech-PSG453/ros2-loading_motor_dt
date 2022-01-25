@@ -31,23 +31,22 @@ void ParseDewetron::parseDewetronFile()
     bool isFirstLine = true;
     std::stringstream ss(line);
     std::string element;
-    if(!dewetronFile.is_open())
-    {
+    if(!dewetronFile.is_open()) {
+
         throw std::runtime_error("Could not open file:");
     }
 
         /* if file is open and is OK continue */
 
     else if(dewetronFile.good()) {
-        while (std::getline(dewetronFile, line))
-        {
-            /* Create a stringstream from line */
+        while (std::getline(dewetronFile, line)) {
 
+            /* Create a stringstream from line */
+            
             std::stringstream ss(line);
-            if(isFirstLine)                 // check for first line, it contains headers
-            {
-                while(std::getline(ss, element, ','))
-                {
+            if(isFirstLine) {                // check for first line, it contains headers
+                
+                while(std::getline(ss, element, ',')) {
                     /* Excluding the _time postfixed names */
 
                     if (firstLineRead % 2 == 0)
@@ -62,8 +61,8 @@ void ParseDewetron::parseDewetronFile()
 
             /* start reading the file line by line */
 
-            while (std::getline(ss, element, ','))
-            {
+            while (std::getline(ss, element, ',')) {
+                
                 rowOfValues.push_back(std::stof(element));
             }
 
@@ -76,9 +75,6 @@ void ParseDewetron::parseDewetronFile()
     }
 
     numOfRows = parsedData.size();
-    //std::cout << "Number of rows is: " << numOfRows << "\n";
-    //std::cout << "Number of columns is " << numOfCols << "\n" ;
-    //std::cout << "Size of vector is: " << (sizeof(std::vector<float>) + (sizeof(float) * parsedData.size())) << "\n";
 
     timeVector.resize(numOfRows);
     valuesVector.resize(numOfRows);
@@ -102,10 +98,6 @@ void ParseDewetron::separateToVectors()
         }
         colCt++;
     }
-
-    //std::cout << timeVector.size() << "The size of timeVec\n";
-    //std::cout << valuesVector.size() << "The size of valVec\n";
-
 }
 
 int ParseDewetron::getNumberOfColumns()

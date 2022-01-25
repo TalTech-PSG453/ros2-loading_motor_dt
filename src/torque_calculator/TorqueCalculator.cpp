@@ -14,12 +14,14 @@ using namespace std::chrono_literals;
 class TorqueCalculator : public rclcpp::Node
 {
 private:
-    //const int angular_velocity_fake = 157; // rad/s or 1500 rpm  | for debugging
+
     bool is_velocity_updated_ = false;
     bool is_power_updated_ = false;
     bool is_efficiency_updated = false;
 
-    float electrical_power_, efficiency_, angular_velocity_;
+    float electrical_power_ = 0;
+    float efficiency_ = 0;
+    float angular_velocity_= 0;
     float mechanical_torque_ = 0;
     float electrical_torque_ref_ = 0;
 
@@ -49,11 +51,11 @@ public:
     TorqueCalculator() : Node("torque_calculator")
     {
     /* Subscribers */
-    powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 100,
+    powerReceiver = this->create_subscription<digital_twin_msgs::msg::Power>("motor_power/electrical_power", 10,
                             std::bind(&TorqueCalculator::powerListener, this, std::placeholders::_1));
-    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency", 100,
+    efficiencyReceiver = this->create_subscription<std_msgs::msg::Float32>("efficiency", 10,
                             std::bind(&TorqueCalculator::efficiencyListener, this, std::placeholders::_1));
-    angularVelocityReceiver = this->create_subscription<std_msgs::msg::Float32>("shaft_angular_velocity", 100,
+    angularVelocityReceiver = this->create_subscription<std_msgs::msg::Float32>("shaft_angular_velocity", 10,
                             std::bind(&TorqueCalculator::angularVelocityListener, this, std::placeholders::_1));
 
     electrical_torque_msg_.data = 0;

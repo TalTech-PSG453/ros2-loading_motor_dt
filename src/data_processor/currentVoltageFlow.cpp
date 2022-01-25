@@ -15,8 +15,7 @@
 #include <functional>
 
 #include "rclcpp/rclcpp.hpp"
-#include <digital_twin_msgs/msg/current.hpp>
-#include <digital_twin_msgs/msg/voltage.hpp>
+#include <digital_twin_msgs/msg/supply_input.hpp>
 
 #include "ParseDewetron.h"
 
@@ -30,8 +29,7 @@ public:
     InputCurrentVoltage() : Node("data_processor")
     {
         /* initializing publishers/subscribers */
-        current_publisher_ = this->create_publisher<digital_twin_msgs::msg::Current>("input_current", 10);
-        voltage_publisher_ = this->create_publisher<digital_twin_msgs::msg::Voltage>("input_voltage", 10);
+        supply_input_publisher_ = this->create_publisher<digital_twin_msgs::msg::SupplyInput>("supply_input", 10);
         timer_ = this->create_wall_timer(1ms, std::bind(&InputCurrentVoltage::publish_messages, this)); // 1ms = 1000 Hz
 
         /* initialize parameters */
@@ -47,11 +45,9 @@ private:
 
     std::vector<std::vector<float>> array_of_processed_data_;
     ParseDewetron *dewetron;
-    digital_twin_msgs::msg::Current inputCurrentValuesMsg;
-    digital_twin_msgs::msg::Voltage inputVoltageValuesMsg;
+    digital_twin_msgs::msg::SupplyInput inputMsg;
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<digital_twin_msgs::msg::Current>::SharedPtr current_publisher_;
-    rclcpp::Publisher<digital_twin_msgs::msg::Voltage>::SharedPtr voltage_publisher_;
+    rclcpp::Publisher<digital_twin_msgs::msg::SupplyInput>::SharedPtr supply_input_publisher_;
 
     /* params */
 
@@ -70,28 +66,26 @@ private:
     void wrapToMsgArray(int index)
     {
         /* According to indexes in the file */
-        inputCurrentValuesMsg.current1 = array_of_processed_data_[index][5];
-        inputCurrentValuesMsg.current2 = array_of_processed_data_[index][4];
-        inputCurrentValuesMsg.current3 = array_of_processed_data_[index][3];
-        inputVoltageValuesMsg.voltage1 = array_of_processed_data_[index][0];
-        inputVoltageValuesMsg.voltage2 = array_of_processed_data_[index][1];
-        inputVoltageValuesMsg.voltage3 = array_of_processed_data_[index][2];
+        inputMsg.currents.current1 = array_of_processed_data_[index][5];
+        inputMsg.currents.current2 = array_of_processed_data_[index][4];
+        inputMsg.currents.current3 = array_of_processed_data_[index][3];
+        inputMsg.voltages.voltage1 = array_of_processed_data_[index][0];
+        inputMsg.voltages.voltage2 = array_of_processed_data_[index][1];
+        inputMsg.voltages.voltage3 = array_of_processed_data_[index][2];
+        inputMsg.stamp = rclcpp::Node::now();
     }
 
     void publish_messages()
     {
         // If run_forever_ is activated, the index will be reset to 0
-        if(run_forever_)
-        {
-            if (arr_idx_ >= dewetron->getNumberOfRows())
-            {
+        if(run_forever_) {
+            if (arr_idx_ >= dewetron->getNumberOfRows()) {
                 arr_idx_ = 0;
             }
         }
 
         wrapToMsgArray(arr_idx_);
-        current_publisher_->publish(inputCurrentValuesMsg);
-        voltage_publisher_->publish(inputVoltageValuesMsg);
+        supply_input_publisher_->publish(inputMsg);
         arr_idx_ += 1;
     }
 
