@@ -38,7 +38,7 @@ ament_target_dependencies(currentVoltageFlow rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(windingErrorChecker rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(torqueCalculator rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(efficiencyMap rclcpp std_msgs)
-ament_target_dependencies(angularConverter rclcpp std_msgs)
+ament_target_dependencies(angularConverter rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(powerCalculator rclcpp std_msgs digital_twin_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
