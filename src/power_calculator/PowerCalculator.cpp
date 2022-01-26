@@ -145,6 +145,7 @@ public:
 
     void publishElectricalPower()
     {
+        /*
         if(input_ready_)
         {
             calculatePowerElectrical();
@@ -155,6 +156,12 @@ public:
             powerElMsg.phase2 = electrical_.phase[1];
             powerElMsg.phase3 = electrical_.phase[2];
             powerElMsg.total = electrical_.total;
+            */
+            powerElMsg.phase1 = 105.0;
+            powerElMsg.phase2 = 105.0;
+            powerElMsg.phase3 = 105.0;
+            powerElMsg.total = 100500.0;
+            powerElMsg.header.stamp = rclcpp::Node::now();
             PowerElectricalPublisher->publish(powerElMsg);
     }
 
@@ -165,6 +172,7 @@ public:
         powerReactMsg.phase2 = reactive_.phase[1];
         powerReactMsg.phase3 = reactive_.phase[2];
         powerReactMsg.total = reactive_.total;
+        powerReactMsg.header.stamp = rclcpp::Node::now();
         PowerReactivePublisher->publish(powerReactMsg);
     }
 

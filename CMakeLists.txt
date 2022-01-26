@@ -20,6 +20,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(message_filters REQUIRED)
 find_package(digital_twin_msgs REQUIRED)
 # Find Matlab
 find_package(Matlab REQUIRED)
@@ -36,8 +37,8 @@ add_executable(powerCalculator src/power_calculator/PowerCalculator.cpp)
 
 ament_target_dependencies(currentVoltageFlow rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(windingErrorChecker rclcpp std_msgs digital_twin_msgs)
-ament_target_dependencies(torqueCalculator rclcpp std_msgs digital_twin_msgs)
-ament_target_dependencies(efficiencyMap rclcpp std_msgs)
+ament_target_dependencies(torqueCalculator rclcpp std_msgs digital_twin_msgs message_filters)
+ament_target_dependencies(efficiencyMap rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(angularConverter rclcpp std_msgs digital_twin_msgs)
 ament_target_dependencies(powerCalculator rclcpp std_msgs digital_twin_msgs)
 

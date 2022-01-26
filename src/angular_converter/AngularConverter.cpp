@@ -22,7 +22,8 @@ public:
     }
 
     void publishRotation()
-    {   rpm_msg.stamp = rclcpp::Node::now();
+    {   rpm_msg.header.stamp = rclcpp::Node::now();
+        rpm_msg.data = 25.0;
         rotation_publisher->publish(rpm_msg);
     }
 
