@@ -6,9 +6,6 @@
  * https://github.com/jfstepha/differential-drive
  */
 
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/float32.hpp"
-#include <digital_twin_msgs/msg/float32_stamped.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -16,6 +13,10 @@
 #include <chrono>
 #include <memory>
 #include <functional>
+
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/float32.hpp"
+#include <digital_twin_msgs/msg/float32_stamped.hpp>
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -26,13 +27,11 @@ int closestItemIDX(vector<float> array, float item)
     float delta=-1;
     int idx=-1;
 
-    //cout<<array.size()<<endl;
+    for(int i = 0; i < array.size(); i++){
 
-    for (int i = 0;i<array.size();i++)
-    {
         float it=array.at(i);
-        if(i==0)
-        {
+
+        if(i==0){
             delta=abs(it-item);
 
             idx=i;
@@ -76,17 +75,17 @@ public:
         RPMReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("actual_rpm", 10,
                             std::bind(&EfficiencyMapProcessor::getRPM, this, placeholders::_1));
 
-        EfficiencyControl = this->create_publisher<std_msgs::msg::Float32>("efficiency", 10);
+        EfficiencyControl = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("efficiency", 10);
         
         timer_ = this->create_wall_timer(100ms, std::bind(&EfficiencyMapProcessor::publishEfficiency, this)); // 100ms = 10 Hz
-        }
+    }
 
     float getEfficiency(float c_rpm, float c_torque)
     {
         int idx_rpm = closestItemIDX(rpm,c_rpm);
         vector<float> torque_column;
-        for(auto item : torque)
-        {
+
+        for(auto item : torque){
             torque_column.push_back(item.at(idx_rpm));
         }
         int idx_torque=closestItemIDX(torque_column,c_torque);
@@ -96,6 +95,7 @@ public:
     void publishEfficiency()
     {
         efficiency_value.data = (getEfficiency(current_state.rpm,current_state.torque)/100); // *current_state.torque
+        efficiency_value.header.stamp = rclcpp::Node::now();
         EfficiencyControl->publish(efficiency_value);
     }
 
@@ -104,9 +104,9 @@ private:
     // creating shared pointers for publishers/subscribers and messages
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr TorqueReceiver;
     rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr RPMReceiver;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr EfficiencyControl;
+    rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr EfficiencyControl;
     rclcpp::TimerBase::SharedPtr timer_;
-    std_msgs::msg::Float32 efficiency_value;
+    digital_twin_msgs::msg::Float32Stamped efficiency_value;
 
     void getTorque(const std_msgs::msg::Float32::SharedPtr msg)
     {
@@ -123,64 +123,44 @@ private:
     void processFile(std::string filename)
     {
         std::ifstream file(filename);
-        if(!file.is_open())
-        {
+        if(!file.is_open()) 
             throw std::runtime_error("Could not open file");
-        }
+
         int line_c=0;
         int word_c=0;
 
-        while (std::getline(file, line))
-        {
+        while (std::getline(file, line)){
             word_c=0;
             string word = "";
             vector<float> temp_tor;
             vector<float> temp_eff;
-            for (auto x : line)
-            {
-                if (x == ',')
-                {
-                    if(line_c==0&&word_c%2==0)
-                    {
+            for (auto x : line){
+                if (x == ','){
+
+                    if(line_c==0&&word_c%2==0){
                         //cout<<word<<endl;
                         rpm.push_back(stof(word));
-                    } else if(line_c==0&&word_c%2!=0)
-                    {
-
-                    }
-                    else
-                    {
-                        if(word_c%2==0)
-                        {
+                    } else if(line_c==0&&word_c%2!=0){}
+                    else {
+                        if(word_c%2==0){
                             temp_tor.push_back(stof(word));
-                        }
-                        else
-                        {
+                        } else {
                             temp_eff.push_back(stof(word));
                         }
                     }
                     word_c++;
                     word = "";
-                }
-                else
-                {
+                } else {
                     word = word + x;
                 }
             }
-            if(line_c==0&&word_c%2==0)
-            {
+            if(line_c==0&&word_c%2==0){
                 rpm.push_back(stof(word));
-            } else if(line_c==0&&word_c%2!=0)
-            {
-            }
-            else
-            {
-                if(word_c%2==0)
-                {
+            } else if(line_c==0&&word_c%2!=0){}
+            else{
+                if(word_c%2==0){
                     temp_tor.push_back(stof(word));
-                }
-                else
-                {
+                } else {
                     temp_eff.push_back(stof(word));
                 }
                 torque.push_back(temp_tor);

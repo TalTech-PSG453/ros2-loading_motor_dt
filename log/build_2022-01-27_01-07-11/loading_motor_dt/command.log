@@ -1,0 +1,2 @@
+Invoking command in '/home/sejego/dev_ws/src/ros2-loading_motor_dt/build/loading_motor_dt': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/sejego/dev_ws/src/ros2-loading_motor_dt -DCMAKE_INSTALL_PREFIX=/home/sejego/dev_ws/src/ros2-loading_motor_dt/install/loading_motor_dt
+Invoked command in '/home/sejego/dev_ws/src/ros2-loading_motor_dt/build/loading_motor_dt' returned '1': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/sejego/dev_ws/src/ros2-loading_motor_dt -DCMAKE_INSTALL_PREFIX=/home/sejego/dev_ws/src/ros2-loading_motor_dt/install/loading_motor_dt

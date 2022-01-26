@@ -4,7 +4,7 @@
 #include <cmath>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
-#include <digital_twin_msgs/msg/current.hpp>
+#include <digital_twin_msgs/msg/supply_input.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <chrono>
 #include <array>
@@ -22,12 +22,11 @@ public:
 
     WindingErrorChecker() : Node("windings_checker")
     {
-        std::cout << "Init happened\n";
         currents_.resize(3);
         can_calculate_ = false;
         t_phase_checker = std::thread(&WindingErrorChecker::phaseChecker, this);
 
-        currents_listener_ = this->create_subscription<digital_twin_msgs::msg::Current>("tb_lm/input_current", 10, 
+        currents_listener_ = this->create_subscription<digital_twin_msgs::msg::SupplyInput>("tb_lm/supply_input", 10, 
                             std::bind(&WindingErrorChecker::currentCallback, this, std::placeholders::_1));
 
         warning_publisher_ = this->create_publisher<std_msgs::msg::String>("diagnostics/warnings/windings", 10);
@@ -42,7 +41,7 @@ public:
 
 private:
 
-    rclcpp::Subscription<digital_twin_msgs::msg::Current>::SharedPtr currents_listener_;
+    rclcpp::Subscription<digital_twin_msgs::msg::SupplyInput>::SharedPtr currents_listener_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr warning_publisher_;
 
     bool not_terminated_ = true;
@@ -52,10 +51,9 @@ private:
     const int SIZE_A = 5000;
     std::thread t_phase_checker;
 
-    void currentCallback(const digital_twin_msgs::msg::Current::SharedPtr msg)
+    void currentCallback(const digital_twin_msgs::msg::SupplyInput::SharedPtr msg)
     {                
-        if(i >= SIZE_A )
-        {
+        if(i >= SIZE_A ){
             i = 0;
             currents_buffer_ = currents_;
             can_calculate_ = true;
@@ -63,9 +61,9 @@ private:
             currents_.resize(3);
         }
 
-        currents_.at(0).push_back(msg->current1);
-        currents_.at(1).push_back(msg->current2);
-        currents_.at(2).push_back(msg->current3);
+        currents_.at(0).push_back(msg->currents.current1);
+        currents_.at(1).push_back(msg->currents.current2);
+        currents_.at(2).push_back(msg->currents.current3);
         i++;
     }
 
@@ -81,18 +79,15 @@ private:
         float square[3] = {0.0};
         std::array<float, 3> root = {0.0, 0.0, 0.0};
         /* squares */
-        for(int j = 0; j<SIZE_A ; j++)
-        {
+        for(int j = 0; j < SIZE_A; j++){
             square[0] += buffer[0][j]*buffer[0][j];
             square[1] += buffer[1][j]*buffer[1][j];
             square[2] += buffer[2][j]*buffer[2][j];
         }
-        for(int j = 0; j<3;j++)
-        {
+        for(int j = 0; j < 3; j++){
             mean[j] = (square[j] / SIZE_A);
         }
-        for(int j = 0; j<3; j++)
-        {
+        for(int j = 0; j < 3; j++){
             root[j] = std::sqrt(mean[j]);
         }
         return root;
@@ -102,34 +97,29 @@ private:
     {
         bool problematic = false;
 
-        while(true)
-        {
+        while(true){
+
             if(!not_terminated_) break;
 
-            if(can_calculate_)
-            {
+            if(can_calculate_){
                 rms_currents_ = calculateRMS(currents_buffer_);
 
-                for(int j = 0; j<3;j++)
-                {
+                for(int j = 0; j < 3;j++){
                     error_coefficient_[j] = rms_currents_[j]/rms_currents_[0];
                 }
-                for(float j : error_coefficient_)
-                {
-                    if( abs(error_coefficient_[0] - j) >= 0.15 ) 
-                    {
+                for(float j : error_coefficient_){
+
+                    if( abs(error_coefficient_[0] - j) >= 0.15 ) {
                         problematic = true;
                         break;
                     }
                 }
                 
-                if(problematic == true)
-                {
+                if(problematic == true){
                     RCLCPP_WARN(this->get_logger(), "Potential malfunction in motor windings");
                     publishWarning();
                     problematic = false;
                 }
-
                 /* CLEANUP */
                 currents_buffer_.clear();
                 can_calculate_ = false;

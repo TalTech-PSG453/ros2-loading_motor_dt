@@ -16,7 +16,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include <digital_twin_msgs/msg/supply_input.hpp>
-
 #include "ParseDewetron.h"
 
 using namespace std::chrono_literals;

@@ -1,0 +1,17 @@
+CMake Error at CMakeLists.txt:24 (find_package):
+  By not providing "Finddigital_twin_msgs.cmake" in CMAKE_MODULE_PATH this
+  project has asked CMake to find a package configuration file provided by
+  "digital_twin_msgs", but CMake did not find one.
+
+  Could not find a package configuration file provided by "digital_twin_msgs"
+  with any of the following names:
+
+    digital_twin_msgsConfig.cmake
+    digital_twin_msgs-config.cmake
+
+  Add the installation prefix of "digital_twin_msgs" to CMAKE_PREFIX_PATH or
+  set "digital_twin_msgs_DIR" to a directory containing one of the above
+  files.  If "digital_twin_msgs" provides a separate development package or
+  SDK, be sure it has been installed.
+
+

@@ -1,0 +1,89 @@
+[0.000000] (-) TimerEvent: {}
+[0.000859] (loading_motor_dt) JobQueued: {'identifier': 'loading_motor_dt', 'dependencies': OrderedDict()}
+[0.001279] (loading_motor_dt) JobStarted: {'identifier': 'loading_motor_dt'}
+[0.015573] (loading_motor_dt) JobProgress: {'identifier': 'loading_motor_dt', 'progress': 'cmake'}
+[0.015895] (loading_motor_dt) Command: {'cmd': ['/usr/bin/cmake', '/home/sejego/dev_ws/src/ros2-loading_motor_dt', '-DCMAKE_INSTALL_PREFIX=/home/sejego/dev_ws/src/ros2-loading_motor_dt/install/loading_motor_dt'], 'cwd': '/home/sejego/dev_ws/src/ros2-loading_motor_dt/build/loading_motor_dt', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'sejego'), ('LC_TIME', 'en_IE.UTF-8'), ('SSH_AGENT_PID', '3056'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('HOME', '/home/sejego'), ('OLDPWD', '/home/sejego/dev_ws'), ('DESKTOP_SESSION', 'pop'), ('NVM_BIN', '/home/sejego/.nvm/versions/node/v17.3.0/bin'), ('NVM_INC', '/home/sejego/.nvm/versions/node/v17.3.0/include/node'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'pop'), ('GTK_MODULES', 'gail:atk-bridge:appmenu-gtk-module'), ('LC_MONETARY', 'en_IE.UTF-8'), ('MANAGERPID', '1328'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('TERMINATOR_DBUS_NAME', 'net.tenshu.Terminator23558193cd9818af7fe4d2c2f5bd9d00f'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '9369'), ('NVM_DIR', '/home/sejego/.nvm'), ('MANDATORY_PATH', '/usr/share/gconf/pop.mandatory.path'), ('IM_CONFIG_PHASE', '1'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'sejego'), ('JOURNAL_STREAM', '8:50204'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('DEFAULTS_PATH', '/usr/share/gconf/pop.default.path'), ('USERNAME', 'sejego'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('RBENV_SHELL', 'bash'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/foxy/bin:/home/sejego/.nvm/versions/node/v17.3.0/bin:/home/sejego/.rbenv/shims:/home/sejego/.rbenv/bin:/home/sejego/.cargo/bin:/home/sejego/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/sejego/.local/bin'), ('SESSION_MANAGER', 'local/pop-os:@/tmp/.ICE-unix/3175,unix/pop-os:/tmp/.ICE-unix/3175'), ('INVOCATION_ID', 'dce43de1e09340a18c3601e8305e4d46'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'en_IE.UTF-8'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':1'), ('TERMINATOR_DBUS_PATH', '/net/tenshu/Terminator2'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'pop:GNOME'), ('LC_TELEPHONE', 'en_IE.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'pop'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LC_NAME', 'en_IE.UTF-8'), ('TERMINATOR_UUID', 'urn:uuid:912118f3-290c-4284-b435-a191edfdaef2'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'pop'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'en_IE.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('LC_IDENTIFICATION', 'en_IE.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/sejego/dev_ws/src/ros2-loading_motor_dt/build/loading_motor_dt'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-pop:/etc/xdg'), ('NVM_CD_FLAGS', ''), ('XDG_DATA_DIRS', '/usr/share/pop:/home/sejego/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share'), ('PYTHONPATH', '/opt/ros/foxy/lib/python3.8/site-packages'), ('LC_NUMERIC', 'en_IE.UTF-8'), ('LC_PAPER', 'en_IE.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/opt/ros/foxy')]), 'shell': False}
+[0.099604] (-) TimerEvent: {}
+[0.131728] (loading_motor_dt) StdoutLine: {'line': b'-- The C compiler identification is GNU 9.3.0\n'}
+[0.198651] (loading_motor_dt) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 9.3.0\n'}
+[0.199685] (-) TimerEvent: {}
+[0.206089] (loading_motor_dt) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc\n'}
+[0.290034] (loading_motor_dt) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc -- works\n'}
+[0.292247] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.299785] (-) TimerEvent: {}
+[0.395704] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.399901] (-) TimerEvent: {}
+[0.421267] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.422059] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.427840] (loading_motor_dt) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++\n'}
+[0.500009] (-) TimerEvent: {}
+[0.572637] (loading_motor_dt) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ -- works\n'}
+[0.575335] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.600128] (-) TimerEvent: {}
+[0.688242] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.700237] (-) TimerEvent: {}
+[0.705040] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.705628] (loading_motor_dt) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.709332] (loading_motor_dt) StdoutLine: {'line': b'-- Found ament_cmake: 0.9.9 (/opt/ros/foxy/share/ament_cmake/cmake)\n'}
+[0.746343] (loading_motor_dt) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") \n'}
+[0.746634] (loading_motor_dt) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[0.800390] (-) TimerEvent: {}
+[0.900719] (-) TimerEvent: {}
+[1.001036] (-) TimerEvent: {}
+[1.030514] (loading_motor_dt) StdoutLine: {'line': b'-- Found builtin_interfaces: 1.0.0 (/opt/ros/foxy/share/builtin_interfaces/cmake)\n'}
+[1.064727] (loading_motor_dt) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[1.073267] (loading_motor_dt) StdoutLine: {'line': b'-- Found rosidl_adapter: 1.2.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)\n'}
+[1.101156] (-) TimerEvent: {}
+[1.201658] (-) TimerEvent: {}
+[1.219950] (loading_motor_dt) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "1.1.1f")  \n'}
+[1.270119] (loading_motor_dt) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/foxy/include  \n'}
+[1.301767] (-) TimerEvent: {}
+[1.402113] (-) TimerEvent: {}
+[1.448997] (loading_motor_dt) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[1.502234] (-) TimerEvent: {}
+[1.510820] (loading_motor_dt) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.0.1 (/opt/ros/foxy/share/rosidl_default_generators/cmake)\n'}
+[1.531752] (loading_motor_dt) StdoutLine: {'line': b'-- Found std_msgs: 2.0.4 (/opt/ros/foxy/share/std_msgs/cmake)\n'}
+[1.565786] (loading_motor_dt) StdoutLine: {'line': b'-- Found rclcpp: 2.4.0 (/opt/ros/foxy/share/rclcpp/cmake)\n'}
+[1.602354] (-) TimerEvent: {}
+[1.648244] (loading_motor_dt) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 1.0.3 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)\n'}
+[1.650508] (loading_motor_dt) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[1.652275] (loading_motor_dt) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[1.702439] (-) TimerEvent: {}
+[1.740903] (loading_motor_dt) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[1.741323] (loading_motor_dt) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[1.802893] (-) TimerEvent: {}
+[1.837408] (loading_motor_dt) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed\n'}
+[1.837745] (loading_motor_dt) StdoutLine: {'line': b'-- Looking for pthread_create in pthreads\n'}
+[1.902981] (-) TimerEvent: {}
+[1.910933] (loading_motor_dt) StdoutLine: {'line': b'-- Looking for pthread_create in pthreads - not found\n'}
+[1.911296] (loading_motor_dt) StdoutLine: {'line': b'-- Looking for pthread_create in pthread\n'}
+[1.996538] (loading_motor_dt) StdoutLine: {'line': b'-- Looking for pthread_create in pthread - found\n'}
+[1.997859] (loading_motor_dt) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[2.003096] (-) TimerEvent: {}
+[2.103408] (-) TimerEvent: {}
+[2.178748] (loading_motor_dt) StdoutLine: {'line': b'-- Found rclpy: 1.0.7 (/opt/ros/foxy/share/rclpy/cmake)\n'}
+[2.180250] (loading_motor_dt) StdoutLine: {'line': b'-- Found message_filters: 3.2.5 (/opt/ros/foxy/share/message_filters/cmake)\n'}
+[2.194550] (loading_motor_dt) StderrLine: {'line': b'CMake Error at CMakeLists.txt:24 (find_package):\n'}
+[2.194829] (loading_motor_dt) StderrLine: {'line': b'  By not providing "Finddigital_twin_msgs.cmake" in CMAKE_MODULE_PATH this\n'}
+[2.194965] (loading_motor_dt) StderrLine: {'line': b'  project has asked CMake to find a package configuration file provided by\n'}
+[2.195084] (loading_motor_dt) StderrLine: {'line': b'  "digital_twin_msgs", but CMake did not find one.\n'}
+[2.195233] (loading_motor_dt) StderrLine: {'line': b'\n'}
+[2.195372] (loading_motor_dt) StderrLine: {'line': b'  Could not find a package configuration file provided by "digital_twin_msgs"\n'}
+[2.195482] (loading_motor_dt) StderrLine: {'line': b'  with any of the following names:\n'}
+[2.195590] (loading_motor_dt) StderrLine: {'line': b'\n'}
+[2.195699] (loading_motor_dt) StderrLine: {'line': b'    digital_twin_msgsConfig.cmake\n'}
+[2.195808] (loading_motor_dt) StderrLine: {'line': b'    digital_twin_msgs-config.cmake\n'}
+[2.195917] (loading_motor_dt) StderrLine: {'line': b'\n'}
+[2.196023] (loading_motor_dt) StderrLine: {'line': b'  Add the installation prefix of "digital_twin_msgs" to CMAKE_PREFIX_PATH or\n'}
+[2.196132] (loading_motor_dt) StderrLine: {'line': b'  set "digital_twin_msgs_DIR" to a directory containing one of the above\n'}
+[2.196241] (loading_motor_dt) StderrLine: {'line': b'  files.  If "digital_twin_msgs" provides a separate development package or\n'}
+[2.196351] (loading_motor_dt) StderrLine: {'line': b'  SDK, be sure it has been installed.\n'}
+[2.196459] (loading_motor_dt) StderrLine: {'line': b'\n'}
+[2.196567] (loading_motor_dt) StderrLine: {'line': b'\n'}
+[2.197228] (loading_motor_dt) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[2.197358] (loading_motor_dt) StdoutLine: {'line': b'See also "/home/sejego/dev_ws/src/ros2-loading_motor_dt/build/loading_motor_dt/CMakeFiles/CMakeOutput.log".\n'}
+[2.197455] (loading_motor_dt) StdoutLine: {'line': b'See also "/home/sejego/dev_ws/src/ros2-loading_motor_dt/build/loading_motor_dt/CMakeFiles/CMakeError.log".\n'}
+[2.203552] (-) TimerEvent: {}
+[2.206073] (loading_motor_dt) CommandEnded: {'returncode': 1}
+[2.234612] (loading_motor_dt) JobEnded: {'identifier': 'loading_motor_dt', 'rc': 1}
+[2.245513] (-) EventReactorShutdown: {}

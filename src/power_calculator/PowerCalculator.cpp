@@ -50,8 +50,8 @@ private:
         float square_[2][3] = {0.0};
 
         /* square_ */
-        for (int j = 0; j < SIZE_A; j++)
-        {
+        for (int j = 0; j < SIZE_A; j++){
+
             square_[0][0] += current_buffer_[0][j] * current_buffer_[0][j];
             square_[0][1] += current_buffer_[1][j] * current_buffer_[1][j];
             square_[0][2] += current_buffer_[2][j] * current_buffer_[2][j];
@@ -60,20 +60,19 @@ private:
             square_[1][1] += voltage_buffer_[1][j] * voltage_buffer_[1][j];
             square_[1][2] += voltage_buffer_[2][j] * voltage_buffer_[2][j];
         }
-        for (int j = 0; j < 3; j++)
-        {
+        for (int j = 0; j < 3; j++){
+
             mean_[0][j] = (square_[0][j] / SIZE_A);
             mean_[1][j] = (square_[1][j] / SIZE_A);
         }
-        for (int j = 0; j < 3; j++)
-        {
+        for (int j = 0; j < 3; j++){
+
             rms_currents_[j] = std::sqrt(mean_[0][j]);
             rms_voltages_[j] = std::sqrt(mean_[1][j]);
         }
-        for(int i=0;i<2;i++)
-        {
-            for(int j=0; j<3; j++)
-            {
+        for(int i=0;i<2;i++){
+
+            for(int j=0; j<3; j++){
                 square_[i][j] = 0;
             }
         }
@@ -105,8 +104,7 @@ public:
         input_voltage_[1] = msg->voltages.voltage2;
         input_voltage_[2] = msg->voltages.voltage3;
 
-        if(count >= SIZE_A )
-        {
+        if(count >= SIZE_A ){
             current_buffer_ = currents_;
             voltage_buffer_ = voltages_;
             input_ready_ = true;
@@ -126,28 +124,28 @@ public:
 
         count++;
     }
+
     void calculatePowerReactive()
     {
-        for(int i=0;i<3;i++)
-        {
+        for(int i=0;i<3;i++){
             reactive_.phase[i] = (abs(input_current_[i]*input_voltage_[i]))/3;
         }
         reactive_.total = reactive_.phase[0]+reactive_.phase[1]+reactive_.phase[2];
     }
+
     void calculatePowerElectrical()
     {
         calculateRMS();
-        electrical_.phase[0] = rms_currents_[0] * rms_voltages_[0] * COS_PHI;
-        electrical_.phase[1] = rms_currents_[1] * rms_voltages_[1] * COS_PHI;
-        electrical_.phase[2] = rms_currents_[2] * rms_voltages_[2] * COS_PHI;
+
+        for(int i = 0; i < 3; i++){
+            electrical_.phase[i] = rms_currents_[i] * rms_voltages_[i] * COS_PHI;
+        }
         electrical_.total = electrical_.phase[0] + electrical_.phase[1] + electrical_.phase[2];
     }
 
     void publishElectricalPower()
     {
-        /*
-        if(input_ready_)
-        {
+        if(input_ready_){
             calculatePowerElectrical();
             clearBuffers();
             input_ready_ = false;
@@ -156,11 +154,6 @@ public:
             powerElMsg.phase2 = electrical_.phase[1];
             powerElMsg.phase3 = electrical_.phase[2];
             powerElMsg.total = electrical_.total;
-            */
-            powerElMsg.phase1 = 105.0;
-            powerElMsg.phase2 = 105.0;
-            powerElMsg.phase3 = 105.0;
-            powerElMsg.total = 100500.0;
             powerElMsg.header.stamp = rclcpp::Node::now();
             PowerElectricalPublisher->publish(powerElMsg);
     }
