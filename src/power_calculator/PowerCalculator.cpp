@@ -18,7 +18,7 @@ class PowerCalculator : public rclcpp::Node
 {
 private:
 
-    const float COS_PHI = 0.84;
+    const float COS_PHI = 0.84; // https://fortop.co.uk/knowledge/white-papers/cos-phi-compensation-cosinus/
     const int SIZE_A = 5000;
 
     float input_current_[3];
