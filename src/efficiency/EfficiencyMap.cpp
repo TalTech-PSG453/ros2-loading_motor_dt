@@ -27,7 +27,7 @@ int closestItemIDX(vector<float> array, float item)
     float delta=-1;
     int idx=-1;
 
-    for(int i = 0; i < array.size(); i++){
+    for(size_t i = 0; i < array.size(); i++){
 
         float it=array.at(i);
 

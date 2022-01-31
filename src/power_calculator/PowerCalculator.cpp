@@ -3,6 +3,8 @@
 #include <chrono>
 #include <memory>
 #include <functional>
+#include <mutex>
+
 #include <digital_twin_msgs/msg/supply_input.hpp>
 #include <digital_twin_msgs/msg/power.hpp>
 
@@ -18,7 +20,8 @@ class PowerCalculator : public rclcpp::Node
 {
 private:
 
-    const float COS_PHI = 0.84; // https://fortop.co.uk/knowledge/white-papers/cos-phi-compensation-cosinus/
+    // https://fortop.co.uk/knowledge/white-papers/cos-phi-compensation-cosinus/
+    const float COS_PHI = 0.84;
     const int SIZE_A = 5000;
 
     float input_current_[3];
@@ -33,6 +36,9 @@ private:
     bool input_ready_ = false;
     powerValues reactive_;
     powerValues electrical_;
+
+    std::mutex mutex_reactive_;
+    std::mutex mutex_electrical_;
 
     /* Declaration of publisher and subscriber shared pointers */
 
@@ -50,6 +56,7 @@ private:
         float square_[2][3] = {0.0};
 
         /* square_ */
+        std::unique_lock<std::mutex> lock(mutex_electrical_);
         for (int j = 0; j < SIZE_A; j++){
 
             square_[0][0] += current_buffer_[0][j] * current_buffer_[0][j];
@@ -60,6 +67,9 @@ private:
             square_[1][1] += voltage_buffer_[1][j] * voltage_buffer_[1][j];
             square_[1][2] += voltage_buffer_[2][j] * voltage_buffer_[2][j];
         }
+
+        lock.unlock();
+ 
         for (int j = 0; j < 3; j++){
 
             mean_[0][j] = (square_[0][j] / SIZE_A);
@@ -96,6 +106,8 @@ public:
 
     void inputCallback(const digital_twin_msgs::msg::SupplyInput::SharedPtr msg)
     {
+        std::unique_lock<std::mutex> lock_current(mutex_reactive_);
+
         input_current_[0] = msg->currents.current1;
         input_current_[1] = msg->currents.current2;
         input_current_[2] = msg->currents.current3;
@@ -103,8 +115,12 @@ public:
         input_voltage_[0] = msg->voltages.voltage1;
         input_voltage_[1] = msg->voltages.voltage2;
         input_voltage_[2] = msg->voltages.voltage3;
+        
+        lock_current.unlock();
 
         if(count >= SIZE_A ){
+
+            std::lock_guard<std::mutex> lock_reactive(mutex_electrical_);
             current_buffer_ = currents_;
             voltage_buffer_ = voltages_;
             input_ready_ = true;
@@ -127,6 +143,7 @@ public:
 
     void calculatePowerReactive()
     {
+        std::lock_guard<std::mutex> lock(mutex_reactive_);
         for(int i=0;i<3;i++){
             reactive_.phase[i] = (abs(input_current_[i]*input_voltage_[i]))/3;
         }
