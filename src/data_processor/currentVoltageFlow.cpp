@@ -29,7 +29,7 @@ public:
     {
         /* initializing publishers/subscribers */
         supply_input_publisher_ = this->create_publisher<digital_twin_msgs::msg::SupplyInput>("supply_input", 10);
-        timer_ = this->create_wall_timer(1ms, std::bind(&InputCurrentVoltage::publish_messages, this)); // 1ms = 1000 Hz
+        timer_ = this->create_wall_timer(0.1ms, std::bind(&InputCurrentVoltage::publish_messages, this)); // 1ms = 1000 Hz
 
         /* initialize parameters */
         init_ros_params();
