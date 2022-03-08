@@ -22,8 +22,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(digital_twin_msgs REQUIRED)
-# Find Matlab
-find_package(Matlab REQUIRED)
+# uncomment if you have MATLAB installed.
+# find_package(Matlab REQUIRED)
 
 add_executable(currentVoltageFlow src/data_processor/currentVoltageFlow.cpp
 	                          src/data_processor/ParseDewetron.cpp
