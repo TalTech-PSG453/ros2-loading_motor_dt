@@ -2,17 +2,23 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import PushRosNamespace
+from launch.actions import GroupAction
+
 def generate_launch_description():
+
+    ns = LaunchConfiguration('namespace', default = 'tb_lm_left')
     ld = LaunchDescription()
+
     config = os.path.join(
         get_package_share_directory('loading_motor_dt'),
         'config',
         'params.yaml'
-        )
-        
+    )
+
     data_processor=Node(
         package = 'loading_motor_dt',
-        namespace = 'tb_lm',
         name = 'data_processor',
         executable = 'currentVoltageFlow',
         parameters = [config]
@@ -20,37 +26,47 @@ def generate_launch_description():
 
     efficiency_map=Node(
         package = 'loading_motor_dt',
-        namespace = 'tb_lm',
         name = 'efficiency_map',
         executable = 'efficiencyMap',
         parameters = [config],
-        remappings=[
-        ("torque", "electrical_torque_ref")
-        ]
+        remappings=[("torque", "electrical_torque_ref")]
+
     )
     torque_calculator=Node(
         package = 'loading_motor_dt',
-        namespace = 'tb_lm',
         name = 'torque_calculator',
         executable = 'torqueCalculator'
     )
 
     power_calculator=Node(
         package = 'loading_motor_dt',
-        namespace = 'tb_lm',
         name = 'power_calculator',
         executable = 'powerCalculator'
     )
 
     angular_converter=Node(
         package = 'loading_motor_dt',
-        namespace = 'tb_lm',
         name = 'angular_converter',
         executable = 'angularConverter'
     )
+
+    nodes_with_ns = GroupAction(
+        actions=[
+            PushRosNamespace(ns),
+            data_processor,
+            angular_converter,
+            efficiency_map,
+            power_calculator,
+            torque_calculator
+
+        ]
+    )
+    """
     ld.add_action(data_processor)
     ld.add_action(angular_converter)
     ld.add_action(efficiency_map)
     ld.add_action(power_calculator)
     ld.add_action(torque_calculator)
+    """
+    ld.add_action(nodes_with_ns)
     return ld
