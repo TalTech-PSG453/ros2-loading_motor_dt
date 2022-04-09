@@ -64,7 +64,15 @@ public:
     {
         /* Initalizing Parameters */
         this->declare_parameter("filename");
-        rclcpp::Parameter filename_param = this->get_parameter("filename");
+
+        try{
+            filename_param = this->get_parameter("filename");
+        }
+        catch(const rclcpp::exceptions::ParameterNotDeclaredException& e){
+            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to declare parameters for efficiency map. Perhaps you did not define the namespace correctly?");
+            RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Terminating...");
+            exit(1);
+        }
 
         processFile(filename_param.as_string());
 
@@ -100,6 +108,7 @@ public:
     }
 
 private:
+    rclcpp::Parameter filename_param;
 
     // creating shared pointers for publishers/subscribers and messages
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr TorqueReceiver;
