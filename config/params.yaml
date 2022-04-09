@@ -1,15 +1,43 @@
-tb_lm:
+
+# This is params file used to configure launching the ROS2 part of testbench
+# This params file is used extensively by loading_motor_dt package.
+# Here we define namespaces that follow the defined preset names, e.g. we have only 2 loading motors
+# thus we will have tb_lm_left("testbench loading motor right") and tb_lm_right("testbench loading motor left")
+# NB! please write full paths for filenames, as there is a bug that relative names are not resolved.
+
+tb_lm_left:
   data_processor:
     ros__parameters:
       run_forever: True
       num_of_cols: 12
-      #filename: "/home/sejego/dev_ws/src/loading_motor_dt/src/data_processor/measurement_malfunction.csv"
-      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/ros_work.csv"
-  
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+
   efficiency_map:
     ros__parameters:
       filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/efficiency/PMSynRM.csv"
-  
+
   windings_checker:
     ros__parameters:
       matlab_path: "/home/sejego"
+
+tb_lm_right:
+  data_processor:
+    ros__parameters:
+      run_forever: True
+      num_of_cols: 12
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+
+  efficiency_map:
+    ros__parameters:
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/efficiency/PMSynRM.csv"
+
+  windings_checker:
+    ros__parameters:
+      matlab_path: "/home/sejego"
+
+tb_tm:
+  data_processor:
+    ros__parameters:
+      run_forever: True
+      num_of_cols: 12
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/ros_work.csv"
