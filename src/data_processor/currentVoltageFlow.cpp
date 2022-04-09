@@ -36,14 +36,14 @@ public:
         this->run_forever_ = run_forever_param.as_bool();
 
         /* Run parser */
-        dewetron = new ParseDewetron(filename_param.as_string(), num_of_cols_param.as_int()); // get from params
+        dewetron = std::make_unique<ParseDewetron>(filename_param.as_string(), num_of_cols_param.as_int()); // get from params
         processValues();
     }
 
 private:
 
     std::vector<std::vector<float>> array_of_processed_data_;
-    ParseDewetron *dewetron;
+    std::unique_ptr<ParseDewetron> dewetron;
     digital_twin_msgs::msg::SupplyInput inputMsg;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<digital_twin_msgs::msg::SupplyInput>::SharedPtr supply_input_publisher_;
@@ -94,9 +94,16 @@ private:
         this->declare_parameter("filename");
         this->declare_parameter("run_forever");
 
-        num_of_cols_param = this->get_parameter("num_of_cols");
-        filename_param = this->get_parameter("filename");
-        run_forever_param = this->get_parameter("run_forever");
+        try{
+            num_of_cols_param = this->get_parameter("num_of_cols");
+            filename_param = this->get_parameter("filename");
+            run_forever_param = this->get_parameter("run_forever");
+        }
+        catch(const rclcpp::exceptions::ParameterNotDeclaredException& e){
+            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to declare parameters for data_processor. Perhaps you did not define the namespace correctly?");
+            RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Terminating...");
+            exit(1);
+        }
     }
 };
 int main(int argc, char **argv)

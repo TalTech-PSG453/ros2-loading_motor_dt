@@ -13,12 +13,9 @@
 ParseDewetron::ParseDewetron(std::string filename, int numberOfColumns)
 {
     numOfCols = numberOfColumns;
-    //filename = filename;
     dewetronFile = std::ifstream(filename);
-    //usedFrequency = frequency;
-    /* automatic parsing of the file */
+
     parseDewetronFile();
-    //std::cout << "Dewetron got parsed\n";
 }
 
 // parse the Dewetron measurements file
@@ -33,7 +30,7 @@ void ParseDewetron::parseDewetronFile()
     std::string element;
     if(!dewetronFile.is_open()) {
 
-        throw std::runtime_error("Could not open file:");
+        throw std::runtime_error("Could not open file. Check filename definitions in /config/params.yaml");
     }
 
         /* if file is open and is OK continue */
@@ -79,8 +76,8 @@ void ParseDewetron::parseDewetronFile()
     timeVector.resize(numOfRows);
     valuesVector.resize(numOfRows);
     separateToVectors();
-    //std::cout << "Separate vectors worked\n";
 }
+
 std::vector<std::vector<float>> ParseDewetron::getProcessed2DVector()
 {
     return parsedData;
