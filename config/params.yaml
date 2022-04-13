@@ -11,6 +11,7 @@ tb_lm_left:
       run_forever: True
       num_of_cols: 12
       filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+      frequency: 1000
 
   efficiency_map:
     ros__parameters:
@@ -26,6 +27,7 @@ tb_lm_right:
       run_forever: True
       num_of_cols: 12
       filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+      frequency: 1000
 
   efficiency_map:
     ros__parameters:
@@ -41,3 +43,4 @@ tb_tm:
       run_forever: True
       num_of_cols: 12
       filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/ros_work.csv"
+      frequency: 1000
