@@ -18,8 +18,6 @@
 #include <digital_twin_msgs/msg/supply_input.hpp>
 #include "ParseDewetron.h"
 
-using namespace std::chrono_literals;
-
 class InputCurrentVoltage : public rclcpp::Node
 {
 
@@ -27,16 +25,21 @@ public:
 
     InputCurrentVoltage() : Node("data_processor")
     {
-        /* initializing publishers/subscribers */
-        supply_input_publisher_ = this->create_publisher<digital_twin_msgs::msg::SupplyInput>("supply_input", 10);
-        timer_ = this->create_wall_timer(0.1ms, std::bind(&InputCurrentVoltage::publish_messages, this)); // 1ms = 1000 Hz
-
         /* initialize parameters */
         init_ros_params();
         this->run_forever_ = run_forever_param.as_bool();
 
+        /* initializing publishers/subscribers */
+        supply_input_publisher_ = this->create_publisher<digital_twin_msgs::msg::SupplyInput>("supply_input", 10);
+
+        auto interval_sec = std::chrono::duration<double, std::ratio<1>>(1.0 / this->pub_frequency_param.as_int());  // cast double Hz to duration in secs of type double
+        auto interval_msec = std::chrono::duration_cast<std::chrono::milliseconds>(interval_sec);                     // cast duration of double to milliseconds
+        
+        timer_ = this->create_wall_timer(interval_msec, std::bind(&InputCurrentVoltage::publish_messages, this));
+
         /* Run parser */
-        dewetron = std::make_unique<ParseDewetron>(filename_param.as_string(), num_of_cols_param.as_int()); // get from params
+        dewetron = std::make_unique<ParseDewetron>(filename_param.as_string(), num_of_cols_param.as_int()); // get number of columns in a file and filename from 
+                                                                                                            // declared parameters.
         processValues();
     }
 
@@ -53,6 +56,7 @@ private:
     rclcpp::Parameter num_of_cols_param;
     rclcpp::Parameter filename_param;
     rclcpp::Parameter run_forever_param;
+    rclcpp::Parameter pub_frequency_param;
 
     int arr_idx_ = 0;
     bool run_forever_;
@@ -76,7 +80,7 @@ private:
 
     void publish_messages()
     {
-        // If run_forever_ is activated, the index will be reset to 0
+        /* If run_forever_ is activated, the index will be reset to 0  when end of file is reached*/
         if(run_forever_) {
             if (arr_idx_ >= dewetron->getNumberOfRows()) {
                 arr_idx_ = 0;
@@ -93,11 +97,13 @@ private:
         this->declare_parameter("num_of_cols");
         this->declare_parameter("filename");
         this->declare_parameter("run_forever");
+        this->declare_parameter("frequency", 500);
 
         try{
             num_of_cols_param = this->get_parameter("num_of_cols");
             filename_param = this->get_parameter("filename");
             run_forever_param = this->get_parameter("run_forever");
+            pub_frequency_param = this->get_parameter("frequency");
         }
         catch(const rclcpp::exceptions::ParameterNotDeclaredException& e){
             RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to declare parameters for data_processor. Perhaps you did not define the namespace correctly?");
@@ -105,6 +111,7 @@ private:
             exit(1);
         }
     }
+
 };
 int main(int argc, char **argv)
 {
