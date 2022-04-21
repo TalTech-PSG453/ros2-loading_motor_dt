@@ -77,7 +77,7 @@ public:
         processFile(filename_param.as_string());
 
         // create publishers/subscribers
-        TorqueReceiver = this->create_subscription<std_msgs::msg::Float32>("torque", 10,
+        TorqueReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("torque", 10,
                             std::bind(&EfficiencyMapProcessor::getTorque, this, placeholders::_1));
 
         RPMReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>("actual_rpm", 10,
@@ -111,13 +111,13 @@ private:
     rclcpp::Parameter filename_param;
 
     // creating shared pointers for publishers/subscribers and messages
-    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr TorqueReceiver;
+    rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr TorqueReceiver;
     rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr RPMReceiver;
     rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr EfficiencyControl;
     rclcpp::TimerBase::SharedPtr timer_;
     digital_twin_msgs::msg::Float32Stamped efficiency_value;
 
-    void getTorque(const std_msgs::msg::Float32::SharedPtr msg)
+    void getTorque(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg)
     {
         ticksSinceTarget = 0;
         current_state.torque=msg->data;

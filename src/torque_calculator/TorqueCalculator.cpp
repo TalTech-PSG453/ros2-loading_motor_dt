@@ -10,7 +10,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include <digital_twin_msgs/msg/power.hpp>
 #include <digital_twin_msgs/msg/float32_stamped.hpp>
-#include "std_msgs/msg/float32.hpp"
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -44,8 +43,8 @@ class TorqueCalculator : public rclcpp::Node
         Subscriber<digital_twin_msgs::msg::Float32Stamped> angularVelocityReceiver;
         Subscriber<digital_twin_msgs::msg::Power> powerReceiver;
         Subscriber<digital_twin_msgs::msg::Float32Stamped> efficiencyReceiver;
-        rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr electricalTorquePublisher;
-        rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr mechanicalTorquePublisher;
+        rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr electricalTorquePublisher;
+        rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr mechanicalTorquePublisher;
 
         // ApproximateTime Policy synchronizer definitions. This is required to approximately synchronize the incoming data from 2  different
         // topics for further calculations. In theory, should increase accuracy. More info below:
@@ -55,8 +54,8 @@ class TorqueCalculator : public rclcpp::Node
         std::shared_ptr<Synchronizer<ApproxSyncPolicy>> msg_sync_;
         rclcpp::TimerBase::SharedPtr timer_;
 
-        std_msgs::msg::Float32 electrical_torque_msg_;
-        std_msgs::msg::Float32 mechanical_torque_msg_;
+        digital_twin_msgs::msg::Float32Stamped electrical_torque_msg_;
+        digital_twin_msgs::msg::Float32Stamped mechanical_torque_msg_;
 
 
     public:
@@ -79,8 +78,8 @@ class TorqueCalculator : public rclcpp::Node
 
             /* Publishers */
 
-            electricalTorquePublisher = this->create_publisher<std_msgs::msg::Float32>("electrical_torque_ref", 10);
-            mechanicalTorquePublisher = this->create_publisher<std_msgs::msg::Float32>("mechanical_torque", 10);
+            electricalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("electrical_torque_ref", 10);
+            mechanicalTorquePublisher = this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("mechanical_torque", 10);
 
             timer_ = this->create_wall_timer(100ms, std::bind(&TorqueCalculator::publishTorques, this)); // 100ms = 10 Hz
         }
@@ -93,6 +92,8 @@ class TorqueCalculator : public rclcpp::Node
                 const std::lock_guard<std::mutex> lock(mutex_);
                 electrical_torque_msg_.data = electrical_torque_ref_;
                 mechanical_torque_msg_.data = mechanical_torque_;
+                electrical_torque_msg_.stamp = rclcpp::Node::now();
+                mechanical_torque_msg_.stamp = rclcpp::Node::now();
                 electricalTorquePublisher->publish(electrical_torque_msg_);
                 mechanicalTorquePublisher->publish(mechanical_torque_msg_);
             }
