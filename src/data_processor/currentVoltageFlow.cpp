@@ -75,7 +75,7 @@ private:
         inputMsg.voltages.voltage1 = array_of_processed_data_[index][0];
         inputMsg.voltages.voltage2 = array_of_processed_data_[index][1];
         inputMsg.voltages.voltage3 = array_of_processed_data_[index][2];
-        inputMsg.header.stamp = rclcpp::Node::now();
+        inputMsg.stamp = rclcpp::Node::now();
     }
 
     void publish_messages()

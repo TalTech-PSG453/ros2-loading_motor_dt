@@ -171,7 +171,7 @@ public:
             powerElMsg.phase2 = electrical_.phase[1];
             powerElMsg.phase3 = electrical_.phase[2];
             powerElMsg.total = electrical_.total;
-            powerElMsg.header.stamp = rclcpp::Node::now();
+            powerElMsg.stamp = rclcpp::Node::now();
             PowerElectricalPublisher->publish(powerElMsg);
     }
 
@@ -182,7 +182,7 @@ public:
         powerReactMsg.phase2 = reactive_.phase[1];
         powerReactMsg.phase3 = reactive_.phase[2];
         powerReactMsg.total = reactive_.total;
-        powerReactMsg.header.stamp = rclcpp::Node::now();
+        powerReactMsg.stamp = rclcpp::Node::now();
         PowerReactivePublisher->publish(powerReactMsg);
     }
 
