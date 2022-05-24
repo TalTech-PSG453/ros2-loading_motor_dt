@@ -8,7 +8,7 @@ from launch.actions import GroupAction
 
 def generate_launch_description():
 
-    ns = LaunchConfiguration('namespace', default = 'tb_lm_right')
+    ns = LaunchConfiguration('namespace', default = 'tb_tm')
     
     ld = LaunchDescription()
     config = os.path.join(

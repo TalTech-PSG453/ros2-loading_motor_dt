@@ -6,17 +6,18 @@
 #ifndef CATKIN_WS_PARSEDEWETRON_H
 #define CATKIN_WS_PARSEDEWETRON_H
 
-#include <iostream>
-#include <unordered_map>
+#include <array>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <array>
 
 /*
  * Summary:
- *      ParseDewetron class provides a mechanism of converting .csv files separated by a ',' of the format defined the following way:
+ *      ParseDewetron class provides a mechanism of converting .csv files separated by a ',' of the
+ * format defined the following way:
  *
  *
  *       +--------------------+--------------------+--------------------+--------------------+
@@ -28,43 +29,41 @@
  *       +--------------------+--------------------+--------------------+--------------------+
  *
  *
- *      Where each column corresponds to a measured parameter, with rows being values measured per parameter with a set
- *      frequency. The number of columns must be known beforehand. The class will process the values into vectors
- *      (one vector per measured parameter) and return them via getter.
+ *      Where each column corresponds to a measured parameter, with rows being values measured per
+ * parameter with a set frequency. The number of columns must be known beforehand. The class will
+ * process the values into vectors (one vector per measured parameter) and return them via getter.
  * */
-class ParseDewetron
-{
-public:
+class ParseDewetron {
+ public:
+  /* File parser */
+  ParseDewetron(std::string filename, int numberOfColumns);
+  ~ParseDewetron();
 
-    /* File parser */
-    ParseDewetron(std::string filename, int numberOfColumns);
-    ~ParseDewetron();
+  /* Getters */
 
-    /* Getters */
+  std::vector<std::vector<float>> get_processed_2D_vector();
+  float get_time_step() const;
+  float get_start_time() const;
+  int get_number_of_columns();
+  int get_number_of_rows();
+  std::vector<std::string> get_list_of_value_names();
+  std::vector<std::vector<float>> get_only_times();
+  std::vector<std::vector<float>> get_only_values();
 
-    std::vector<std::vector<float>> getProcessed2DVector();
-    float getTimeStep() const;
-    float getStartTime() const;
-    int getNumberOfColumns();
-    int getNumberOfRows();
-    std::vector<std::string> getListOfValueNames();
-    std::vector<std::vector<float>> getOnlyTimes();
-    std::vector<std::vector<float>> getOnlyValues();
-
-private:
-    void separateToVectors();
-    std::ifstream dewetronFile;
-    float timeStep;
-    float startTime;
-    int numOfCols;
-    int numOfRows;
-    std::string filename;
-    std::vector<std::vector<float>> parsedData;
-    std::vector<std::string> listOfValueNames;
-    std::vector<std::vector<float>> timeVector;
-    std::vector<std::vector<float>> valuesVector;
-    std::string line;
-    void parseDewetronFile();
+ private:
+  void separate_to_vectors();
+  std::ifstream dewetron_file_;
+  float time_step_;
+  float start_time_;
+  int num_of_cols_;
+  int num_of_rows_;
+  std::string filename_;
+  std::vector<std::vector<float>> parsed_data_;
+  std::vector<std::string> list_of_value_names_;
+  std::vector<std::vector<float>> time_vector_;
+  std::vector<std::vector<float>> values_vector_;
+  std::string line_;
+  void parse_dewetron_file();
 };
 
-#endif //CATKIN_WS_PARSEDEWETRON_H
+#endif  // CATKIN_WS_PARSEDEWETRON_H

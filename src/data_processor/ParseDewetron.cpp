@@ -3,133 +3,98 @@
 // This script parses the data from Dewetron measurement csv file
 //
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <array>
 #include "ParseDewetron.h"
 
-ParseDewetron::ParseDewetron(std::string filename, int numberOfColumns)
-{
-    numOfCols = numberOfColumns;
-    dewetronFile = std::ifstream(filename);
+#include <array>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
-    parseDewetronFile();
+ParseDewetron::ParseDewetron(std::string filename, int numberOfColumns) {
+  num_of_cols_ = numberOfColumns;
+  dewetron_file_ = std::ifstream(filename);
+  parse_dewetron_file();
 }
 
 // parse the Dewetron measurements file
-void ParseDewetron::parseDewetronFile()
-{
-    int firstLineRead = 0;
-    std::vector<float> rowOfValues;
-    listOfValueNames.reserve(numOfCols);
-    rowOfValues.reserve(numOfCols);                 // reserve numOfCols number of columns of the csv file.
-    bool isFirstLine = true;
-    std::stringstream ss(line);
-    std::string element;
-    if(!dewetronFile.is_open()) {
+void ParseDewetron::parse_dewetron_file() {
+  int firstLineRead = 0;
+  std::vector<float> row_of_values;
+  list_of_value_names_.reserve(num_of_cols_);
+  row_of_values.reserve(num_of_cols_);  // reserve num_of_cols_ number of columns of the csv file.
+  bool is_first_line = true;
+  std::stringstream ss(line_);
+  std::string element;
+  if (!dewetron_file_.is_open()) {
+    throw std::runtime_error(
+        "Could not open file. Check filename definitions in /config/params.yaml");
+  }
 
-        throw std::runtime_error("Could not open file. Check filename definitions in /config/params.yaml");
-    }
+  // if file is open and is OK continue
 
-        /* if file is open and is OK continue */
+  else if (dewetron_file_.good()) {
+    while (std::getline(dewetron_file_, line_)) {
+      // Create a stringstream from line_
 
-    else if(dewetronFile.good()) {
-        while (std::getline(dewetronFile, line)) {
+      std::stringstream ss(line_);
+      if (is_first_line) {  // check for first line_, it contains headers
 
-            /* Create a stringstream from line */
-            
-            std::stringstream ss(line);
-            if(isFirstLine) {                // check for first line, it contains headers
-                
-                while(std::getline(ss, element, ',')) {
-                    /* Excluding the _time postfixed names */
-
-                    if (firstLineRead % 2 == 0)
-                        listOfValueNames.push_back(element);
-                    firstLineRead++;
-                }
-
-                isFirstLine = false;
-                continue;
-            }
-            /* Create a stringstream from line */
-
-            /* start reading the file line by line */
-
-            while (std::getline(ss, element, ',')) {
-                
-                rowOfValues.push_back(std::stof(element));
-            }
-
-            parsedData.push_back(rowOfValues);
-
-            /*empty the buffer vector*/
-            rowOfValues.clear();
+        while (std::getline(ss, element, ',')) {
+          // Excluding the _time postfixed names
+          if (firstLineRead % 2 == 0) list_of_value_names_.push_back(element);
+          firstLineRead++;
         }
-        dewetronFile.close();
+
+        is_first_line = false;
+        continue;
+      }
+      // Create a stringstream from line_
+
+      // start reading the file line_ by line_
+
+      while (std::getline(ss, element, ',')) {
+        row_of_values.push_back(std::stof(element));
+      }
+
+      parsed_data_.push_back(row_of_values);
+
+      // empty the buffer vector
+      row_of_values.clear();
     }
+    dewetron_file_.close();
+  }
 
-    numOfRows = parsedData.size();
+  num_of_rows_ = parsed_data_.size();
 
-    timeVector.resize(numOfRows);
-    valuesVector.resize(numOfRows);
-    separateToVectors();
+  time_vector_.resize(num_of_rows_);
+  values_vector_.resize(num_of_rows_);
+  separate_to_vectors();
 }
 
-std::vector<std::vector<float>> ParseDewetron::getProcessed2DVector()
-{
-    return parsedData;
-}
+std::vector<std::vector<float>> ParseDewetron::get_processed_2D_vector() { return parsed_data_; }
 
-void ParseDewetron::separateToVectors()
-{
-    int colCt = 0;
-    for(auto row : parsedData)
-    {
-        for(int i = 0; i < numOfCols-1; i+=2)
-        {
-            timeVector[colCt].push_back(row[i+1]);
-            valuesVector[colCt].push_back(row[i]);
-        }
-        colCt++;
+void ParseDewetron::separate_to_vectors() {
+  int colCt = 0;
+  for (auto row : parsed_data_) {
+    for (int i = 0; i < num_of_cols_ - 1; i += 2) {
+      time_vector_[colCt].push_back(row[i + 1]);
+      values_vector_[colCt].push_back(row[i]);
     }
+    colCt++;
+  }
 }
 
-int ParseDewetron::getNumberOfColumns()
-{
-    return numOfCols;
-}
-
-int ParseDewetron::getNumberOfRows()
-{
-    return numOfRows;
-}
-std::vector<std::string> ParseDewetron::getListOfValueNames()
-{
-    return listOfValueNames;
-}
-float ParseDewetron::getStartTime() const
-{
-    return parsedData[1][0];
-}
-float ParseDewetron::getTimeStep() const
-{
-    return (parsedData[1][1] - parsedData[1][0]);
-}
-std::vector<std::vector<float>> ParseDewetron::getOnlyTimes()
-{
-    return timeVector;
-}
-std::vector<std::vector<float>> ParseDewetron::getOnlyValues()
-{
-    return valuesVector;
-}
+int ParseDewetron::get_number_of_columns() { return num_of_cols_; }
+int ParseDewetron::get_number_of_rows() { return num_of_rows_; }
+std::vector<std::string> ParseDewetron::get_list_of_value_names() { return list_of_value_names_; }
+float ParseDewetron::get_start_time() const { return parsed_data_[1][0]; }
+float ParseDewetron::get_time_step() const { return (parsed_data_[1][1] - parsed_data_[1][0]); }
+std::vector<std::vector<float>> ParseDewetron::get_only_times() { return time_vector_; }
+std::vector<std::vector<float>> ParseDewetron::get_only_values() { return values_vector_; }
 /* Destructor */
-ParseDewetron::~ParseDewetron()
-{
-    parsedData.clear();
-    timeVector.clear();
-    valuesVector.clear();
+ParseDewetron::~ParseDewetron() {
+  parsed_data_.clear();
+  time_vector_.clear();
+  values_vector_.clear();
 }

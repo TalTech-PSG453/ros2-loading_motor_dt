@@ -42,5 +42,5 @@ tb_tm:
     ros__parameters:
       run_forever: True
       num_of_cols: 12
-      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/ros_work.csv"
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/1k_ros_work.csv"
       frequency: 1000
