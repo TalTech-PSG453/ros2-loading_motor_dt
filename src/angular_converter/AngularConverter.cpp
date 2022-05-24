@@ -15,9 +15,9 @@ using namespace std::chrono_literals;
 class AngularConverter : public rclcpp::Node {
  public:
   AngularConverter() : Node("angular_converter") {
-    rotation_publisher =
+    rotation_publisher_ =
         this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("actual_rpm", 10);
-    feedback_receiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>(
+    feedback_receiver_ = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>(
         "shaft_angular_velocity", 10,
         std::bind(&AngularConverter::velocityReceiver, this, std::placeholders::_1));
     timer_ = this->create_wall_timer(
@@ -26,20 +26,20 @@ class AngularConverter : public rclcpp::Node {
 
   void publishRotation() {
     std::lock_guard<std::mutex> lock(mutex_);
-    rpm_msg.stamp = rclcpp::Node::now();
-    rotation_publisher->publish(rpm_msg);
+    rpm_msg_.stamp = rclcpp::Node::now();
+    rotation_publisher_->publish(rpm_msg_);
   }
 
  private:
-  rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr feedback_receiver;
-  rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr rotation_publisher;
+  rclcpp::Subscription<digital_twin_msgs::msg::Float32Stamped>::SharedPtr feedback_receiver_;
+  rclcpp::Publisher<digital_twin_msgs::msg::Float32Stamped>::SharedPtr rotation_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
-  digital_twin_msgs::msg::Float32Stamped rpm_msg;
+  digital_twin_msgs::msg::Float32Stamped rpm_msg_;
   std::mutex mutex_;
 
   void velocityReceiver(const digital_twin_msgs::msg::Float32Stamped::SharedPtr msg) {
     std::lock_guard<std::mutex> lock(mutex_);
-    rpm_msg.data = msg->data * 60 / (2 * M_PI);
+    rpm_msg_.data = msg->data * 60 / (2 * M_PI);
   }
 };
 
