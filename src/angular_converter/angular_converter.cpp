@@ -26,7 +26,7 @@ class AngularConverter : public rclcpp::Node {
 
   void publishRotation() {
     std::lock_guard<std::mutex> lock(mutex_);
-    rpm_msg_.stamp = rclcpp::Node::now();
+    rpm_msg_.header.stamp = rclcpp::Node::now();
     rotation_publisher_->publish(rpm_msg_);
   }
 

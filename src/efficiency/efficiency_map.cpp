@@ -100,7 +100,7 @@ class EfficiencyMapProcessor : public rclcpp::Node {
   void publishEfficiency() {
     efficiency_value.data =
         (getEfficiency(current_state.rpm, current_state.torque) / 100);  // *current_state.torque
-    efficiency_value.stamp = rclcpp::Node::now();
+    efficiency_value.header.stamp = rclcpp::Node::now();
     EfficiencyControl->publish(efficiency_value);
   }
 

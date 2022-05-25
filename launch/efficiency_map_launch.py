@@ -15,7 +15,7 @@ def generate_launch_description():
         package = 'loading_motor_dt',
         namespace = 'tb_lm',
         name = 'efficiency_map',
-        executable = 'efficiencyMap',
+        executable = 'efficiency_map',
         parameters = [config]
     )
     ld.add_action(data_processor)

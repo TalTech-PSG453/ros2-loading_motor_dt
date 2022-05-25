@@ -27,7 +27,7 @@ def generate_launch_description():
     efficiency_map=Node(
         package = 'loading_motor_dt',
         name = 'efficiency_map',
-        executable = 'efficiencyMap',
+        executable = 'efficiency_map',
         parameters = [config],
         remappings=[("torque", "electrical_torque_ref")]
 
@@ -35,19 +35,19 @@ def generate_launch_description():
     torque_calculator=Node(
         package = 'loading_motor_dt',
         name = 'torque_calculator',
-        executable = 'torqueCalculator'
+        executable = 'torque_calculator'
     )
 
     power_calculator=Node(
         package = 'loading_motor_dt',
         name = 'power_calculator',
-        executable = 'powerCalculator'
+        executable = 'power_calculator'
     )
 
     angular_converter=Node(
         package = 'loading_motor_dt',
         name = 'angular_converter',
-        executable = 'angularConverter'
+        executable = 'angular_converter'
     )
 
     nodes_with_ns = GroupAction(

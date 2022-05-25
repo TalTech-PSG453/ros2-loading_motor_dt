@@ -97,8 +97,8 @@ class TorqueCalculator : public rclcpp::Node {
     const std::lock_guard<std::mutex> lock(mutex_);
     electrical_torque_msg_.data = electrical_torque_ref_;
     mechanical_torque_msg_.data = mechanical_torque_;
-    electrical_torque_msg_.stamp = rclcpp::Node::now();
-    mechanical_torque_msg_.stamp = rclcpp::Node::now();
+    electrical_torque_msg_.header.stamp = rclcpp::Node::now();
+    mechanical_torque_msg_.header.stamp = rclcpp::Node::now();
     electricalTorquePublisher->publish(electrical_torque_msg_);
     mechanicalTorquePublisher->publish(mechanical_torque_msg_);
   }

@@ -172,7 +172,7 @@ class PowerCalculator : public rclcpp::Node {
     power_el_msg_.phase2 = electrical_.phase[1];
     power_el_msg_.phase3 = electrical_.phase[2];
     power_el_msg_.total = electrical_.total;
-    power_el_msg_.stamp = rclcpp::Node::now();
+    power_el_msg_.header.stamp = rclcpp::Node::now();
     power_electrical_publisher_->publish(power_el_msg_);
   }
 
@@ -182,7 +182,7 @@ class PowerCalculator : public rclcpp::Node {
     power_react_msg_.phase2 = reactive_.phase[1];
     power_react_msg_.phase3 = reactive_.phase[2];
     power_react_msg_.total = reactive_.total;
-    power_react_msg_.stamp = rclcpp::Node::now();
+    power_react_msg_.header.stamp = rclcpp::Node::now();
     power_reactive_publisher_->publish(power_react_msg_);
   }
 

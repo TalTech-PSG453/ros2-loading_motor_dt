@@ -70,7 +70,7 @@ class InputCurrentVoltage : public rclcpp::Node {
     input_msg_.voltages.voltage1 = array_of_processed_data_[index][0];
     input_msg_.voltages.voltage2 = array_of_processed_data_[index][1];
     input_msg_.voltages.voltage3 = array_of_processed_data_[index][2];
-    input_msg_.stamp = rclcpp::Node::now();
+    input_msg_.header.stamp = rclcpp::Node::now();
   }
 
   void publish_messages() {

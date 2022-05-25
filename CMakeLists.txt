@@ -10,6 +10,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# uncomment if you have MATLAB installed, 
+# and provide the path to installation
 # set(MATLAB_DIR "/usr/local/MATLAB/R2021a")
 
 # find dependencies
