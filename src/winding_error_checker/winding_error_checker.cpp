@@ -11,6 +11,15 @@
 
 using namespace std::chrono_literals;
 
+/* Checks current input for abnormal values.
+ *  Accumulates current data into a buffer currents_buffer_ and
+ *  calculates root mean square (RMS) values. RMS values of each phase
+ *  are then used to get a reference value (used as coefficient) and
+ *  compare phase values. If there is a significant difference bigger
+ *  than ERR_MARGIN then a warning message is fired.
+ *  The phase checker works asynchronously with the main (subscriber thread),
+ *  The asynchronous control is handled through variables can_calculate_ and not_terminated_
+ */
 class WindingErrorChecker : public rclcpp::Node {
  public:
   std::vector<std::vector<float>> currents_;
@@ -45,11 +54,12 @@ class WindingErrorChecker : public rclcpp::Node {
   std::array<float, 3> rms_currents_ = {0.0, 0.0, 0.0};
   float error_coefficient_[3];
   int i = 0;
-  const int SIZE_A = 5000;
+  const int BUFFER_SIZE = 5000;
+  const float ERR_MARGIN = 0.15;
   std::thread t_phase_checker;
 
   void current_callback(const digital_twin_msgs::msg::SupplyInput::SharedPtr msg) {
-    if (i >= SIZE_A) {
+    if (i >= BUFFER_SIZE) {
       i = 0;
       currents_buffer_ = currents_;
       can_calculate_ = true;
@@ -73,13 +83,13 @@ class WindingErrorChecker : public rclcpp::Node {
     float square[3] = {0.0};
     std::array<float, 3> root = {0.0, 0.0, 0.0};
     /* squares */
-    for (int j = 0; j < SIZE_A; j++) {
+    for (int j = 0; j < BUFFER_SIZE; j++) {
       square[0] += buffer[0][j] * buffer[0][j];
       square[1] += buffer[1][j] * buffer[1][j];
       square[2] += buffer[2][j] * buffer[2][j];
     }
     for (int j = 0; j < 3; j++) {
-      mean[j] = (square[j] / SIZE_A);
+      mean[j] = (square[j] / BUFFER_SIZE);
     }
     for (int j = 0; j < 3; j++) {
       root[j] = std::sqrt(mean[j]);
@@ -100,7 +110,7 @@ class WindingErrorChecker : public rclcpp::Node {
           error_coefficient_[j] = rms_currents_[j] / rms_currents_[0];
         }
         for (float j : error_coefficient_) {
-          if (abs(error_coefficient_[0] - j) >= 0.15) {
+          if (abs(error_coefficient_[0] - j) >= ERR_MARGIN) {
             problematic = true;
             break;
           }

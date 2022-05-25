@@ -15,19 +15,18 @@
 #include <vector>
 
 /*
- * Summary:
- *      ParseDewetron class provides a mechanism of converting .csv files separated by a ',' of the
+ * ParseDewetron is a class that takes care of parsing the files recorded by a Dewetron.
+ * The output is parsed std::vector<std::vector<float>> of currents and voltages (a 2D-array).
+ * ParseDewetron class provides a mechanism of converting .csv files separated by a ',' of the
  * format defined the following way:
  *
- *
  *       +--------------------+--------------------+--------------------+--------------------+
- *       | MeasuredParameter1 | MeasuredParameter2 | MeasuredParameter3 | MeasuredParameterX |
+ *       | MeasuredParameter1 |       time1       | MeasuredParameter2 | time2               |
  *       +--------------------+--------------------+--------------------+--------------------+
- *       | Value1             | Value1             | Value1             | Value1             |
- *       | Value2             | Value2             | Value2             | Value2             |
- *       | ValueX             | ValueX             | ValueX             | ValueX             |
+ *       | Value1             | time1             | Value1             | time1               |
+ *       | Value2             | time2             | Value2             | time2               |
+ *       | ValueX             | timeX             | ValueX             | timeX               |
  *       +--------------------+--------------------+--------------------+--------------------+
- *
  *
  *      Where each column corresponds to a measured parameter, with rows being values measured per
  * parameter with a set frequency. The number of columns must be known beforehand. The class will
@@ -35,11 +34,11 @@
  * */
 class ParseDewetron {
  public:
-  /* File parser */
+  // File parser
   ParseDewetron(std::string filename, int numberOfColumns);
   ~ParseDewetron();
 
-  /* Getters */
+  // Getters
 
   std::vector<std::vector<float>> get_processed_2D_vector();
   float get_time_step() const;
@@ -63,7 +62,7 @@ class ParseDewetron {
   std::vector<std::vector<float>> time_vector_;
   std::vector<std::vector<float>> values_vector_;
   std::string line_;
-  void parse_dewetron_file();
+  void parse();
 };
 
 #endif  // CATKIN_WS_PARSEDEWETRON_H

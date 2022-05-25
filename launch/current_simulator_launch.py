@@ -17,19 +17,19 @@ def generate_launch_description():
         'params.yaml'
     )
 
-    data_processor=Node(
+    current_simulator=Node(
         package = 'loading_motor_dt',
-        name = 'data_processor',
-        executable = 'currentVoltageFlow',
+        name = 'current_simulator',
+        executable = 'current_simulator',
         parameters = [config]
     )
 
-    data_processor_with_ns = GroupAction(
+    current_simulator_with_ns = GroupAction(
         actions=[
             PushRosNamespace(ns),
-            data_processor,
+            current_simulator,
         ]
     )
 
-    ld.add_action(data_processor_with_ns)
+    ld.add_action(current_simulator_with_ns)
     return ld

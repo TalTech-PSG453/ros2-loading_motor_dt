@@ -6,11 +6,11 @@
 # NB! please write full paths for filenames, as there is a bug that relative names are not resolved.
 
 tb_lm_left:
-  data_processor:
+  current_simulator:
     ros__parameters:
       run_forever: True
       num_of_cols: 12
-      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/current_simulator/measurement_malfunction.csv"
       frequency: 1000
 
   efficiency_map:
@@ -22,11 +22,11 @@ tb_lm_left:
       matlab_path: "/home/sejego"
 
 tb_lm_right:
-  data_processor:
+  current_simulator:
     ros__parameters:
       run_forever: True
       num_of_cols: 12
-      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/measurement_malfunction.csv"
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/current_simulator/measurement_malfunction.csv"
       frequency: 1000
 
   efficiency_map:
@@ -38,9 +38,9 @@ tb_lm_right:
       matlab_path: "/home/sejego"
 
 tb_tm:
-  data_processor:
+  current_simulator:
     ros__parameters:
       run_forever: True
       num_of_cols: 12
-      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/data_processor/1k_ros_work.csv"
+      filename: "/home/sejego/dev_ws/src/ros2-loading_motor_dt/src/current_simulator/1k_ros_work.csv"
       frequency: 1000

@@ -1,9 +1,4 @@
-//
-// Created by sejego on 10/18/20.
-// This script parses the data from Dewetron measurement csv file
-//
-
-#include "ParseDewetron.h"
+#include "parse_dewetron.h"
 
 #include <array>
 #include <fstream>
@@ -14,11 +9,18 @@
 ParseDewetron::ParseDewetron(std::string filename, int numberOfColumns) {
   num_of_cols_ = numberOfColumns;
   dewetron_file_ = std::ifstream(filename);
-  parse_dewetron_file();
+  parse();
+}
+
+// Destructor
+ParseDewetron::~ParseDewetron() {
+  parsed_data_.clear();
+  time_vector_.clear();
+  values_vector_.clear();
 }
 
 // parse the Dewetron measurements file
-void ParseDewetron::parse_dewetron_file() {
+void ParseDewetron::parse() {
   int firstLineRead = 0;
   std::vector<float> row_of_values;
   list_of_value_names_.reserve(num_of_cols_);
@@ -92,9 +94,3 @@ float ParseDewetron::get_start_time() const { return parsed_data_[1][0]; }
 float ParseDewetron::get_time_step() const { return (parsed_data_[1][1] - parsed_data_[1][0]); }
 std::vector<std::vector<float>> ParseDewetron::get_only_times() { return time_vector_; }
 std::vector<std::vector<float>> ParseDewetron::get_only_values() { return values_vector_; }
-/* Destructor */
-ParseDewetron::~ParseDewetron() {
-  parsed_data_.clear();
-  time_vector_.clear();
-  values_vector_.clear();
-}

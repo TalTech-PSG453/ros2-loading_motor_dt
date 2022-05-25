@@ -17,10 +17,10 @@ def generate_launch_description():
         'params.yaml'
     )
 
-    data_processor=Node(
+    current_simulator=Node(
         package = 'loading_motor_dt',
-        name = 'data_processor',
-        executable = 'currentVoltageFlow',
+        name = 'current_simulator',
+        executable = 'current_simulator',
         parameters = [config]
     )
 
@@ -53,7 +53,7 @@ def generate_launch_description():
     nodes_with_ns = GroupAction(
         actions=[
             PushRosNamespace(ns),
-            data_processor,
+            current_simulator,
             angular_converter,
             efficiency_map,
             power_calculator,
@@ -61,12 +61,6 @@ def generate_launch_description():
 
         ]
     )
-    """
-    ld.add_action(data_processor)
-    ld.add_action(angular_converter)
-    ld.add_action(efficiency_map)
-    ld.add_action(power_calculator)
-    ld.add_action(torque_calculator)
-    """
+
     ld.add_action(nodes_with_ns)
     return ld

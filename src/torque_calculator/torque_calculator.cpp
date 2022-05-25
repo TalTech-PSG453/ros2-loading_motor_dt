@@ -1,6 +1,3 @@
-//
-// Created by sejego on 2/3/21.
-//
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
@@ -18,6 +15,17 @@
 using namespace std::chrono_literals;
 using namespace message_filters;
 
+/* Node that calculates electrical and mechanical torque of a shaft
+ *  based on efficiency, power of the motor and angular velocity at a moment of time
+ *  It will work only when these three topics are being published onto, otherwise
+ *  Node cannot calculate the output torques. Calculation for mechanical torque
+ *  is based on electrical torque reference and efficiency of the motor.
+ *  Since efficiency, power and angular velocity are coming from 3 different sources,
+ *  Approximate Time Synchronizer is used that compares timestamps in the Headers of msgs
+ *  publishing and torque calculation are happening asynchronously. Locks are avoided by use of
+ *  a mutex_.
+ */
+
 class TorqueCalculator : public rclcpp::Node {
  private:
   float electrical_power_ = 0;
@@ -29,10 +37,9 @@ class TorqueCalculator : public rclcpp::Node {
   std::mutex mutex_;
 
   float calculate_electrical_torque_ref() { return (electrical_power_ / angular_velocity_); }
-
   float calculate_mechanical_torque() { return (electrical_torque_ref_ * efficiency_); }
 
-  /* Shared Pointers with ROS methods */
+  // Shared Pointers with ROS methods
   Subscriber<digital_twin_msgs::msg::Float32Stamped> angularVelocityReceiver;
   Subscriber<digital_twin_msgs::msg::Power> powerReceiver;
   Subscriber<digital_twin_msgs::msg::Float32Stamped> efficiencyReceiver;
@@ -55,10 +62,9 @@ class TorqueCalculator : public rclcpp::Node {
 
  public:
   TorqueCalculator() : Node("torque_calculator") {
-    /* Subscribers */
-
+    // Subscribers
     powerReceiver.subscribe(this, "motor_power/electrical_power");
-    angularVelocityReceiver.subscribe(this, "actual_rpm");  // shaft_angular_velocity
+    angularVelocityReceiver.subscribe(this, "shaft_angular_velocity");  // shaft_angular_velocity
     efficiencyReceiver.subscribe(this, "efficiency");
 
     // The way synchronizer is implemented can be found below:

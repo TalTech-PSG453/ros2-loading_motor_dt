@@ -1,9 +1,3 @@
-//
-// Created by sejego on 10/19/20.
-// Last modified by sejego on 26/03/21.
-//
-//
-
 #include <chrono>
 #include <digital_twin_msgs/msg/supply_input.hpp>
 #include <fstream>
@@ -15,12 +9,17 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ParseDewetron.h"
+#include "parse_dewetron.h"
 #include "rclcpp/rclcpp.hpp"
 
+/*  A Node which simulates the flow of current and voltage.
+ *  In the initialization, it reads the supplied file from the parameters
+ *  and processes the data from the file in the ParseDewetron. Data is then played
+ *  back (streamed) to ROS topics at a specified frequency (also specified in params).
+ */
 class InputCurrentVoltage : public rclcpp::Node {
  public:
-  InputCurrentVoltage() : Node("data_processor") {
+  InputCurrentVoltage() : Node("current_simulator") {
     // initialize parameters
     init_ros_params();
     this->run_forever_ = run_forever_param_.as_bool();
@@ -64,7 +63,7 @@ class InputCurrentVoltage : public rclcpp::Node {
   void process_values() { array_of_processed_data_ = dewetron_->get_only_values(); }
 
   void wrap_to_msg_array(int index) {
-    /* According to indexes in the file */
+    // According to indexes in the file
     input_msg_.currents.current1 = array_of_processed_data_[index][5];
     input_msg_.currents.current2 = array_of_processed_data_[index][4];
     input_msg_.currents.current3 = array_of_processed_data_[index][3];
@@ -75,8 +74,8 @@ class InputCurrentVoltage : public rclcpp::Node {
   }
 
   void publish_messages() {
-    /* If run_forever_ is activated, the index will be reset to 0  when end of
-     * file is reached*/
+    // If run_forever_ is activated, the index will be reset
+    // to 0  when end of file is reached
     if (run_forever_) {
       if (arr_idx_ >= dewetron_->get_number_of_rows()) {
         arr_idx_ = 0;

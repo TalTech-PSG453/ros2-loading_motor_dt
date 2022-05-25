@@ -11,11 +11,20 @@
 
 using namespace std::chrono_literals;
 
+/* A PowerValues struct holding values
+*  of all powers that each phase is carrying
+*/
 struct PowerValues {
   float phase[3] = {0.0};
   float total = 0;
 };
 
+/* Node that calculates the electrical and reactive power of an electrical drive based
+*  on the input current and voltage. Current values are buffered in a currents_buffer_
+*  and voltages_buffer_ and used to calculate the powers. Since reactive is computed
+*  almost immediately while electrical power takes time, they are computed asynchronously.
+*  Race conditions and locks are prevented by use of mutex_reactive_ and mutex_electrical_
+*/
 class PowerCalculator : public rclcpp::Node {
  public:
   PowerCalculator() : Node("power_calculator") {
@@ -41,7 +50,7 @@ class PowerCalculator : public rclcpp::Node {
   // https://fortop.co.uk/knowledge/white-papers/cos-phi-compensation-cosinus/
 
   const float COS_PHI = 0.84;
-  const int SIZE_A = 5000;
+  const int BUFFER_SIZE = 5000;
 
   float input_current_[3];
   float input_voltage_[3];
@@ -75,7 +84,7 @@ class PowerCalculator : public rclcpp::Node {
 
     /* square_ */
     std::unique_lock<std::mutex> lock(mutex_electrical_);
-    for (int j = 0; j < SIZE_A; j++) {
+    for (int j = 0; j < BUFFER_SIZE; j++) {
       square_[0][0] += current_buffer_[0][j] * current_buffer_[0][j];
       square_[0][1] += current_buffer_[1][j] * current_buffer_[1][j];
       square_[0][2] += current_buffer_[2][j] * current_buffer_[2][j];
@@ -88,8 +97,8 @@ class PowerCalculator : public rclcpp::Node {
     lock.unlock();
 
     for (int j = 0; j < 3; j++) {
-      mean_[0][j] = (square_[0][j] / SIZE_A);
-      mean_[1][j] = (square_[1][j] / SIZE_A);
+      mean_[0][j] = (square_[0][j] / BUFFER_SIZE);
+      mean_[1][j] = (square_[1][j] / BUFFER_SIZE);
     }
     for (int j = 0; j < 3; j++) {
       rms_currents_[j] = std::sqrt(mean_[0][j]);
@@ -114,7 +123,7 @@ class PowerCalculator : public rclcpp::Node {
 
     lock_current.unlock();
 
-    if (count >= SIZE_A) {
+    if (count >= BUFFER_SIZE) {
       std::lock_guard<std::mutex> lock_reactive(mutex_electrical_);
       current_buffer_ = currents_;
       voltage_buffer_ = voltages_;
