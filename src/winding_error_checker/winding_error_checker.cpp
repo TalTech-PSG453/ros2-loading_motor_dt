@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
  *  are then used to get a reference value (used as coefficient) and
  *  compare phase values. If there is a significant difference bigger
  *  than ERR_MARGIN then a warning message is fired.
- *  The phase checker works asynchronously with the main (subscriber thread),
+ *  The phase_checker() works asynchronously with the main (subscriber thread),
  *  The asynchronous control is handled through variables can_calculate_ and not_terminated_
  */
 class WindingErrorChecker : public rclcpp::Node {

@@ -2,21 +2,31 @@
 
 import rclpy
 from rclpy.node import Node
-
 from std_msgs.msg import String
 from digital_twin_msgs.msg import Current
 from digital_twin_msgs.msg import AxesCurrents
-import threading
-from math import pow, sqrt
+
 import matlab.engine
 import matlab
+
+import threading
+from math import pow, sqrt
 import sys
-import os
 
 SIZE_A = 5000
+ERR_MARGIN = 0.15
 
 class WindingErrorChecker(Node):
-
+    """ Checks current input for abnormal values.
+        Accumulates current data into currents_buf_ array
+        to calculate RMS values. RMS values of each phase 
+        are then used as a reference value to compare current values
+        if there is a significant difference bigger than ERR_MARGIN,
+        a warning message is fired, currents are recorded and sent to
+        be analyzed in MATLAB. phase_check_thread works asynchronously
+        with the main thread. Asynchronous control is handled using
+        can_calculate variable.
+    """
     def __init__(self):
         super().__init__('windings_checker')
 
@@ -27,8 +37,10 @@ class WindingErrorChecker(Node):
             10)
 
         self.currents_listener_  # prevent unused variable warning
-        self.warnings_publisher_ = self.create_publisher(String, 'diagnostics/warnings', 10)
-        self.axes_currents_publisher_ = self.create_publisher(AxesCurrents, 'diagnostics/windings/axes_currents', 10)
+        self.warnings_publisher_ = self.create_publisher(
+            String, 'diagnostics/warnings', 10)
+        self.axes_currents_publisher_ = self.create_publisher(
+            AxesCurrents, 'diagnostics/windings/axes_currents', 10)
 
         self.declare_parameter('matlab_path')
         param = self.get_parameter('matlab_path')
@@ -37,10 +49,12 @@ class WindingErrorChecker(Node):
         self.i = 0
         self.matlab_active = False
         self.can_calculate = False
-        self.currents_= [[] for i in range(3)]
+        self.currents_ = [[] for i in range(3)]
 
-        phase_check_thread = threading.Thread(target = self.phase_checker, daemon = True)
-        self.matlab_thread = threading.Thread(target = self.matlab_analysis, args=(matlab_script_path,), daemon=True)
+        phase_check_thread = threading.Thread(
+            target=self.phase_checker, daemon=True)
+        self.matlab_thread = threading.Thread(
+            target=self.matlab_analysis, args=(matlab_script_path,), daemon=True)
         phase_check_thread.start()
 
         # Axes currents
@@ -54,7 +68,7 @@ class WindingErrorChecker(Node):
         msg = String()
         msg.data = 'Winding warning'
         self.warnings_publisher_.publish(msg)
-    
+
     def publish_axes_currents(self):
         msg = AxesCurrents()
         msg.q_axis_current = self.iqs
@@ -90,7 +104,8 @@ class WindingErrorChecker(Node):
         eng.cd(script_path, nargout=0)
 
         try:
-            x, y = eng.parkclarke(ml_input[0], ml_input[1], ml_input[2], nargout = 2)
+            x, y = eng.parkclarke(
+                ml_input[0], ml_input[1], ml_input[2], nargout=2)
         except:
             e = sys.exc_info()[0]
             self.get_logger().error("Failed to run Park & Clarke function. Error: %s", e)
@@ -134,7 +149,7 @@ class WindingErrorChecker(Node):
                     error_coeff[e] = rms[e] / rms[0]
 
                 for err in error_coeff:
-                    if abs(error_coeff[0] - err) >= 0.15:
+                    if abs(error_coeff[0] - err) >= ERR_MARGIN:
                         problematic = True
                         break
 
@@ -147,6 +162,7 @@ class WindingErrorChecker(Node):
                         self.matlab_active = True
 
                 self.can_calculate = False
+
 
 def main(args=None):
     rclpy.init(args=args)
