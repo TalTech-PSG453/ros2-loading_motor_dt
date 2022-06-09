@@ -20,6 +20,12 @@ tb_lm_left:
   windings_checker:
     ros__parameters:
       matlab_path: "/home/sejego"
+      buffer_size: 1000
+      error_margin: 0.15
+  
+  power_calculator:
+    ros__parameters:
+      buffer_size: 1000
 
 tb_lm_right:
   current_simulator:
@@ -36,6 +42,12 @@ tb_lm_right:
   windings_checker:
     ros__parameters:
       matlab_path: "/home/sejego"
+      buffer_size: 1000
+      error_margin: 0.15
+  
+  power_calculator:
+    ros__parameters:
+      buffer_size: 1000  
 
 tb_tm:
   current_simulator:

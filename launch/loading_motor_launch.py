@@ -41,7 +41,8 @@ def generate_launch_description():
     power_calculator=Node(
         package = 'loading_motor_dt',
         name = 'power_calculator',
-        executable = 'power_calculator'
+        executable = 'power_calculator',
+        parameters = [config]
     )
 
     angular_converter=Node(

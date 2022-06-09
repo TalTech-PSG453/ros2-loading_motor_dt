@@ -12,28 +12,29 @@
 using namespace std::chrono_literals;
 
 /* A PowerValues struct holding values
-*  of all powers that each phase is carrying
-*/
+ *  of all powers that each phase is carrying
+ */
 struct PowerValues {
   float phase[3] = {0.0};
   float total = 0;
 };
 
 /* Node that calculates the electrical and reactive power of an electrical drive based
-*  on the input current and voltage. Current values are buffered in a currents_buffer_
-*  and voltages_buffer_ and used to calculate the powers. Since reactive is computed
-*  almost immediately while electrical power takes time, they are computed asynchronously.
-*  Race conditions and locks are prevented by use of mutex_reactive_ and mutex_electrical_
-*  Subscribers are saving data into input_volatage_ and input_current_ arrays, and 
-*  these variables are used by calculate_reactive_power() and calculate_electrical_power,
-*  mutexes ARE REQUIRED to prevent either of callbacks accessing those arrays during calculation
-*  or buffer copying. 
-*/
+ *  on the input current and voltage. Current values are buffered in a currents_buffer_
+ *  and voltages_buffer_ and used to calculate the powers. Since reactive is computed
+ *  almost immediately while electrical power takes time, they are computed asynchronously.
+ *  Race conditions and locks are prevented by use of mutex_reactive_ and mutex_electrical_
+ *  Subscribers are saving data into input_volatage_ and input_current_ arrays, and
+ *  these variables are used by calculate_reactive_power() and calculate_electrical_power,
+ *  mutexes ARE REQUIRED to prevent either of callbacks accessing those arrays during calculation
+ *  or buffer copying.
+ */
 class PowerCalculator : public rclcpp::Node {
  public:
   PowerCalculator() : Node("power_calculator") {
     currents_.resize(3);
     voltages_.resize(3);
+    set_params();
 
     power_reactive_publisher_ =
         this->create_publisher<digital_twin_msgs::msg::Power>("motor_power/reactive_power", 100);
@@ -54,7 +55,7 @@ class PowerCalculator : public rclcpp::Node {
   // https://fortop.co.uk/knowledge/white-papers/cos-phi-compensation-cosinus/
 
   const float COS_PHI = 0.84;
-  const int BUFFER_SIZE = 5000;
+  int buffer_size_;
 
   float input_current_[3];
   float input_voltage_[3];
@@ -82,13 +83,30 @@ class PowerCalculator : public rclcpp::Node {
   digital_twin_msgs::msg::Power power_react_msg_;
   digital_twin_msgs::msg::Power power_el_msg_;
 
+  /* parameters declaration */
+
+  rclcpp::Parameter buffer_size_param;
+
+  void set_params() {
+    try {
+      this->declare_parameter("buffer_size");
+      buffer_size_param = this->get_parameter("buffer_size");
+      buffer_size_ = buffer_size_param.as_int();
+    } catch (const rclcpp::exceptions::ParameterNotDeclaredException& e) {
+      RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
+                  "Passed parameter for buffer_size was empty or invalid. Setting the default "
+                  "buffer_size to 1000");
+      buffer_size_ = 1000;
+    }
+  }
+
   void calculate_RMS() {
     float mean_[2][3] = {0.0};
     float square_[2][3] = {0.0};
 
     /* square_ */
     std::unique_lock<std::mutex> lock(mutex_electrical_);
-    for (int j = 0; j < BUFFER_SIZE; j++) {
+    for (int j = 0; j < buffer_size_; j++) {
       square_[0][0] += current_buffer_[0][j] * current_buffer_[0][j];
       square_[0][1] += current_buffer_[1][j] * current_buffer_[1][j];
       square_[0][2] += current_buffer_[2][j] * current_buffer_[2][j];
@@ -101,8 +119,8 @@ class PowerCalculator : public rclcpp::Node {
     lock.unlock();
 
     for (int j = 0; j < 3; j++) {
-      mean_[0][j] = (square_[0][j] / BUFFER_SIZE);
-      mean_[1][j] = (square_[1][j] / BUFFER_SIZE);
+      mean_[0][j] = (square_[0][j] / buffer_size_);
+      mean_[1][j] = (square_[1][j] / buffer_size_);
     }
     for (int j = 0; j < 3; j++) {
       rms_currents_[j] = std::sqrt(mean_[0][j]);
@@ -127,10 +145,10 @@ class PowerCalculator : public rclcpp::Node {
 
     lock_current.unlock();
 
-    if (count >= BUFFER_SIZE) {
+    if (count >= buffer_size_) {
       /* lock guard will automatically release the lock_reactive mutex when
-      *  it goes out of scope.
-      */
+       *  it goes out of scope.
+       */
       std::lock_guard<std::mutex> lock_reactive(mutex_electrical_);
       current_buffer_ = currents_;
       voltage_buffer_ = voltages_;
@@ -200,7 +218,7 @@ class PowerCalculator : public rclcpp::Node {
   }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<PowerCalculator>());
   rclcpp::shutdown();
