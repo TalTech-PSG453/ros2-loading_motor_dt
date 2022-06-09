@@ -135,8 +135,11 @@ class PowerCalculator : public rclcpp::Node {
       current_buffer_ = currents_;
       voltage_buffer_ = voltages_;
       input_ready_ = true;
+      /* Required to clear (in order to avoid overflow of values) and resize to 3, to push back*/
       voltages_.clear();
       currents_.clear();
+      voltages_.resize(3);
+      currents_.resize(3);
       count = 0;
     }
 
