@@ -33,6 +33,7 @@ class TorqueCalculator : public rclcpp::Node {
   float angular_velocity_ = 0;
   float mechanical_torque_ = 0;
   float electrical_torque_ref_ = 0;
+  const float k_rads_in_rpm = 0.104719755;
 
   std::mutex mutex_;
 
@@ -64,7 +65,8 @@ class TorqueCalculator : public rclcpp::Node {
   TorqueCalculator() : Node("torque_calculator") {
     // Subscribers
     powerReceiver.subscribe(this, "motor_power/electrical_power");
-    angularVelocityReceiver.subscribe(this, "shaft_angular_velocity");  // shaft_angular_velocity
+    angularVelocityReceiver.subscribe(
+        this, "angular_velocity");  // shaft angular velocity of a motor in RPM
     efficiencyReceiver.subscribe(this, "efficiency");
 
     // The way synchronizer is implemented can be found below:
@@ -103,12 +105,14 @@ class TorqueCalculator : public rclcpp::Node {
     mechanicalTorquePublisher->publish(mechanical_torque_msg_);
   }
 
+  float convert_to_rads(float rpm_value) { return rpm_value * k_rads_in_rpm; }
+
   void sync_callback(const digital_twin_msgs::msg::Power::ConstSharedPtr& msg1,
                      const digital_twin_msgs::msg::Float32Stamped::ConstSharedPtr& msg2,
                      const digital_twin_msgs::msg::Float32Stamped::ConstSharedPtr& msg3) {
     electrical_power_ = msg1->total;
     angular_velocity_ = msg2->data;
-    efficiency_ = msg3->data;
+    efficiency_ = convert_to_rads(msg3->data);
     const std::lock_guard<std::mutex> lock(mutex_);
     electrical_torque_ref_ = calculate_electrical_torque_ref();
     mechanical_torque_ = calculate_mechanical_torque();

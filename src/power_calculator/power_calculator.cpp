@@ -24,6 +24,10 @@ struct PowerValues {
 *  and voltages_buffer_ and used to calculate the powers. Since reactive is computed
 *  almost immediately while electrical power takes time, they are computed asynchronously.
 *  Race conditions and locks are prevented by use of mutex_reactive_ and mutex_electrical_
+*  Subscribers are saving data into input_volatage_ and input_current_ arrays, and 
+*  these variables are used by calculate_reactive_power() and calculate_electrical_power,
+*  mutexes ARE REQUIRED to prevent either of callbacks accessing those arrays during calculation
+*  or buffer copying. 
 */
 class PowerCalculator : public rclcpp::Node {
  public:
@@ -124,14 +128,15 @@ class PowerCalculator : public rclcpp::Node {
     lock_current.unlock();
 
     if (count >= BUFFER_SIZE) {
+      /* lock guard will automatically release the lock_reactive mutex when
+      *  it goes out of scope.
+      */
       std::lock_guard<std::mutex> lock_reactive(mutex_electrical_);
       current_buffer_ = currents_;
       voltage_buffer_ = voltages_;
       input_ready_ = true;
       voltages_.clear();
       currents_.clear();
-      voltages_.resize(3);
-      currents_.resize(3);
       count = 0;
     }
 

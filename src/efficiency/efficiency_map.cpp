@@ -76,8 +76,9 @@ class EfficiencyMapProcessor : public rclcpp::Node {
     TorqueReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>(
         "torque", 10, std::bind(&EfficiencyMapProcessor::getTorque, this, placeholders::_1));
 
+    /* Shaft angular velocity of a motor in RPM */
     RPMReceiver = this->create_subscription<digital_twin_msgs::msg::Float32Stamped>(
-        "actual_rpm", 10, std::bind(&EfficiencyMapProcessor::getRPM, this, placeholders::_1));
+        "angular_velocity", 10, std::bind(&EfficiencyMapProcessor::getRPM, this, placeholders::_1));
 
     EfficiencyControl =
         this->create_publisher<digital_twin_msgs::msg::Float32Stamped>("efficiency", 10);
