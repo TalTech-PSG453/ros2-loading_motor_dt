@@ -68,8 +68,16 @@ install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
 )
+# This is required for /config folder to be part of the install
+# during the compilation, so that all updates are also included
 install(DIRECTORY
   config
+  DESTINATION share/${PROJECT_NAME}
+)
+# This is required for /data_files folder to be part of the install
+# during the compilation, so that all updates are also included
+install(DIRECTORY
+  data_files
   DESTINATION share/${PROJECT_NAME}
 )
 
