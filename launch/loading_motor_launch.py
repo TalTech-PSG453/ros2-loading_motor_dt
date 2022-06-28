@@ -45,17 +45,10 @@ def generate_launch_description():
         parameters = [config]
     )
 
-    angular_converter=Node(
-        package = 'loading_motor_dt',
-        name = 'angular_converter',
-        executable = 'angular_converter'
-    )
-
     nodes_with_ns = GroupAction(
         actions=[
             PushRosNamespace(ns),
             current_simulator,
-            angular_converter,
             efficiency_map,
             power_calculator,
             torque_calculator

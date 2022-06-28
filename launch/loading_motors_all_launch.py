@@ -19,14 +19,14 @@ def generate_launch_description():
     loading_left = PythonLaunchDescriptionSource([package_prefix,'/launch/loading_motor_launch.py'])
     loading_right = PythonLaunchDescriptionSource([package_prefix,'/launch/loading_motor_launch.py'])
 
-    launch_traction = GroupAction(
+    launch_left = GroupAction(
         actions=[
             # push-ros-namespace to set namespace of included nodes
             #PushRosNamespace('tb_lm_left'),
             IncludeLaunchDescription(loading_left, launch_arguments = {'namespace':'tb_lm_left'}.items()),
         ]
     )
-    launch_loading = GroupAction(
+    launch_right = GroupAction(
         actions=[
             # push-ros-namespace to set namespace of included nodes
             #PushRosNamespace('tb_tm'),
@@ -34,6 +34,6 @@ def generate_launch_description():
         ]
     )
 
-    ld.add_action(launch_traction)
-    ld.add_action(launch_loading)
+    ld.add_action(launch_right)
+    ld.add_action(launch_left)
     return ld
